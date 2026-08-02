@@ -1,0 +1,7 @@
+# Compiled binaries
+*.exe
+*.o
+*.out
+
+# IDE files
+.vscode/
