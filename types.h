@@ -131,6 +131,7 @@ typedef struct GameState{
     int currentRound;
     int currentPlayerIndex;
     double bankMoney;
+    int turnOrder[PLAYER_COUNT];
     
 }GameState;
 
