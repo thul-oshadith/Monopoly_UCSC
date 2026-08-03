@@ -1,3 +1,6 @@
+#ifndef TYPES_H
+#define TYPES_H
+
 #define SQUARE_COUNT 40
 #define PLAYER_COUNT 4
 #define PROPERTY_COUNT 22
@@ -69,13 +72,6 @@ typedef struct Property{
     int hotel;
 }Property;
 
-typedef struct Square{
-    int index;
-    char name[50];
-    SquareType type;
-    int dataIndex;
-}Square;
-
 typedef struct Railway{
     char name[40];
 
@@ -89,6 +85,20 @@ typedef struct Utility{
     int owner;
     int mortgaged;
 }Utility;
+
+typedef struct Square{
+    int index;
+    char name[50];
+    SquareType type;
+    
+    union {
+        Property property;
+        Railway railway;
+        Utility utility;
+        int taxAmount;
+        int jailBailAmount;
+    } data;
+}Square;
 
 typedef struct Loan{
     int borrower;
@@ -115,9 +125,14 @@ typedef struct RegionalCard{
     int duration;
 }RegionalCard;
 
-typedef struct Game{
+typedef struct GameState{
+    Square board[SQUARE_COUNT];
+    Player players[PLAYER_COUNT];
     int currentRound;
-    int currentPlayer;
-}Game;
+    int currentPlayerIndex;
+    double bankMoney;
+    
+}GameState;
 
 
+#endif
