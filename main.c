@@ -6,7 +6,7 @@
 void init_Board(GameState *game);
 void init_Players(GameState *game);
 void decideTurnOrder(GameState *game);
-void print_Players(GameState *game);
+
 
 int main(){
     srand(time(NULL)); // seed random numbers for dice
@@ -42,7 +42,7 @@ int main(){
 
             }
             
-            printf(" %s rolled total dice score of %d, moved to %s (sqaure %d)\n", game.players[p].name,
+            printf(" %s rolled total dice score of %d, moved to %s (square %d)\n", game.players[p].name,
             diceTotal, game.board[newPosition].name,  newPosition);
 
             
