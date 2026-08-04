@@ -105,3 +105,9 @@ void decideTurnOrder(GameState *game) {
     printf("\n");
 }
 
+
+void handleLanding(GameState *game, int playerIdx){
+     
+    int pos = game->players[playerIdx].position;
+
+}
