@@ -105,19 +105,3 @@ void decideTurnOrder(GameState *game) {
     printf("\n");
 }
 
-int main() {
-    srand(time(NULL));
-
-    GameState game;
-    
-    // Initialize dummy players just for this test
-    strcpy(game.players[0].name, "Aggressive Investor");
-    strcpy(game.players[1].name, "Conservative Banker");
-    strcpy(game.players[2].name, "Risk Taker");
-    strcpy(game.players[3].name, "Opportunistic Trader");
-
-    // Run the logic
-    decideTurnOrder(&game);
-
-    return 0;
-}
