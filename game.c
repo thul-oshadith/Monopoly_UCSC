@@ -106,8 +106,82 @@ void decideTurnOrder(GameState *game) {
 }
 
 
-void handleLanding(GameState *game, int playerIdx){
-     
+void handleLanding(GameState *game, int playerIdx) {
     int pos = game->players[playerIdx].position;
+    Square *sq = &game->board[pos];  // pointer to the square they landed on
 
+    printf("  >> %s landed on %s\n", game->players[playerIdx].name, sq->name);
+
+    switch (sq->type) {
+
+        case SQUARE_PROPERTY:
+
+        Property *prop = &sq->data.property;
+        if (prop->owner == -1) {
+        // Unowned — player can buy it
+            if (game->players[playerIdx].cash >= prop->purchasePrice) {
+            game->players[playerIdx].cash -= prop->purchasePrice;
+            prop->owner = playerIdx;
+            printf("  >> %s bought %s for LKR %d\n",
+                game->players[playerIdx].name, prop->name, prop->purchasePrice);
+            } 
+            else {
+                printf("  >> %s can't afford %s (costs LKR %d)\n",
+                game->players[playerIdx].name, prop->name, prop->purchasePrice);
+            }
+        } 
+        else if (prop->owner != playerIdx) {
+        // Owned by someone else — pay rent
+            int rent = prop->rent;
+            game->players[playerIdx].cash -= rent;
+            game->players[prop->owner].cash += rent;
+            printf("  >> %s paid LKR %d rent to %s\n",
+            game->players[playerIdx].name, rent, game->players[prop->owner].name);
+            }
+        else {
+            // Player owns it — nothing happens
+            printf("  >> %s owns this property.\n", game->players[playerIdx].name);
+        }
+
+        break;
+
+    
+        case SQUARE_RAILWAY:
+            // TODO
+            break;
+
+        case SQUARE_UTILITY:
+            // TODO
+            break;
+
+        case SQUARE_TAX:
+            // TODO
+            break;
+
+        case SQUARE_SPECIAL:
+            // Handle "Go To Jail" (square 30)
+            // TODO
+            break;
+
+        case SQUARE_EVENT:
+            // TODO
+            break;
+
+        case SQUARE_BANK:
+            // TODO
+            break;
+
+        case SQUARE_INSURANCE:
+            // TODO
+            break;
+
+        case SQUARE_JAIL:
+            // Just visiting — nothing happens
+            printf("  >> Just visiting jail.\n");
+            break;
+
+        case SQUARE_GO:
+            // Already handled in main.c (pass GO check)
+            break;
+    }
 }
