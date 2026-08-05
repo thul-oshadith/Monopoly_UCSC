@@ -114,7 +114,7 @@ void handleLanding(GameState *game, int playerIdx) {
 
     switch (sq->type) {
 
-        case SQUARE_PROPERTY:
+        case SQUARE_PROPERTY:{
 
         Property *prop = &sq->data.property;
         if (prop->owner == -1) {
@@ -141,9 +141,11 @@ void handleLanding(GameState *game, int playerIdx) {
         else {
             // Player owns it — nothing happens
             printf("  >> %s owns this property.\n", game->players[playerIdx].name);
-        }
+            }
 
         break;
+        }
+
 
     
         case SQUARE_RAILWAY:
@@ -154,14 +156,26 @@ void handleLanding(GameState *game, int playerIdx) {
             // TODO
             break;
 
-        case SQUARE_TAX:
-            // TODO
+        case SQUARE_TAX:{
+            int tax =  sq->data.taxAmount;
+            game->players[playerIdx].cash -= tax;
+            printf("  >> %s paid LKR %d in tax\n",game->players[playerIdx].name, tax);
+            
             break;
+        }
 
-        case SQUARE_SPECIAL:
-            // Handle "Go To Jail" (square 30)
-            // TODO
+        case SQUARE_SPECIAL:{
+            
+            if (pos == 30){
+              game->players[playerIdx].position = 10;
+              game->players[playerIdx].inJail = 1;
+              game->players[playerIdx].jailTurns = 0;
+              printf(" >> %s was sent to JAIL! \n", game->players[playerIdx].name);
+
+            }
+        
             break;
+        }
 
         case SQUARE_EVENT:
             // TODO
