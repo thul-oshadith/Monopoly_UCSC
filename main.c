@@ -53,16 +53,16 @@ int main(){
             int minGO = goCount[game.turnOrder[0]];
             for (int i = 1; i < PLAYER_COUNT; i++){
                 int idx = game.turnOrder[i];
-                if (!game.players[idx].bankrupt && goCount[idx] < minGo)
+                if (!game.players[idx].bankrupt && goCount[idx] < minGO)
                 {
-                    minGo = goCount[idx];
+                    minGO = goCount[idx];
 
                 }
 
 
             }
 
-            if (minGo >= 500){
+            if (minGO>= 500){
                 gameOver = 1;
                 break;
             }
