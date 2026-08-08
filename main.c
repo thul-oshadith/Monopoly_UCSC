@@ -32,7 +32,48 @@ int main(){
                 continue;
             }
 
-            int diceTotal = (rand()%6 +1) + (rand()%6 + 1);
+            int die1 = rand() % 6 + 1;
+            int die2 = rand() % 6 + 1;
+            int diceTotal = die1 + die2;
+
+            //JAIL LOGIC
+            if (game.players[p].inJail){
+                printf("%s is in the JAIL (Turn%d). They rolled %d and %d.\n", game.players[p].name,
+                game.players[p].jailTurns + 1, die1, die2);
+
+                if(die1 == die2){
+                    printf(" >> Doubles! %s escapes Jail \n", game.players[p].name);
+                    game.players[p].inJail = 0;
+                    game.players[p].jailTurns = 0;
+                }
+                else if (game.players[p].cash>=300)
+                {
+                    printf(" >> No Doubles, but %s pays LKR 300 bail to escap.\n", game.players[p].name);
+                    game.players[p].cash -=300;
+                    game.players[p].inJail = 0;
+                    game.players[p].jailTurns = 0;
+                }
+
+                else
+                {
+                    game.players[p].jailTurns++;
+                    if (game.players[p].jailTurns >=3)
+                    {
+                        printf(" >> %s has served 3 turns.Forced release!\n",game.players[p].name);
+                        game.players[p].inJail = 0;
+                        game.players[p].jailTurns = 0;
+                    }
+                    else
+                    {
+                        printf(" >> %s stays in Jail.\n", game.players[p].name);
+                        continue; // skip rest of turn
+                    }
+
+                }
+
+            }
+
+            //END OF JAIL LOGIC
 
             int oldPosition = game.players[p].position;
             int newPosition = (oldPosition + diceTotal) % SQUARE_COUNT;
