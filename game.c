@@ -187,9 +187,49 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             break;
         }
 
-        case SQUARE_UTILITY:
-            // TODO
+        case SQUARE_UTILITY:{
+            int owner = sq->data.utility.owner;
+            if (owner == -1)
+            {
+                printf(" >>%s is unowned (Can be bought!)\n",sq->name);
+            }
+            else if (owner == playerIdx)
+            {
+                printf(" >> %s owns this utility.\n", game->players[playerIdx].name);
+            }
+            else if (sq->data.utility.mortgaged)
+            {
+                printf(" >> %s is mortgaged. No rent paid.\n", sq->name);
+            }
+            else
+            {
+                int utilityCount = 0;
+                for(int i = 0; i < SQUARE_COUNT; i++)
+                {
+                    if (game->board[i].type == SQUARE_UTILITY && game->board[i].data.utility.owner ==owner)
+                    {
+                        utilityCount++;
+                    }
+                }
+
+                int rent = 0;
+                if(utilityCount == 1)
+                {
+                    rent = diceTotal *4;
+                }
+                else if(utilityCount == 2)
+                {
+                    rent = diceTotal *10;
+                }
+                game->players[playerIdx].cash -= rent;
+                game->players[owner].cash += rent;
+                printf("  >> %s paid LKR %d rent to %s (%dx dice roll of %d)\n", 
+                    game->players[playerIdx].name, rent, game->players[owner].name, utilityCount, diceTotal);
+ 
+                
+            }
             break;
+        }
 
         case SQUARE_TAX:{
             int tax =  sq->data.taxAmount;
