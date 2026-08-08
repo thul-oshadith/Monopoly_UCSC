@@ -106,7 +106,7 @@ void decideTurnOrder(GameState *game) {
 }
 
 
-void handleLanding(GameState *game, int playerIdx) {
+void handleLanding(GameState *game, int playerIdx, int diceTotal) {
     int pos = game->players[playerIdx].position;
     Square *sq = &game->board[pos];  // pointer to the square they landed on
 
@@ -145,12 +145,47 @@ void handleLanding(GameState *game, int playerIdx) {
 
         break;
         }
-
-
     
-        case SQUARE_RAILWAY:
-            // TODO
+        case SQUARE_RAILWAY:{
+            int owner = sq->data.railway.owner;
+            if (owner == -1)
+            {
+                printf(" >> %s is unowned. (Can be bought!)\n", sq->name);
+                //  will add the purchasing logic later
+            }
+            else if (owner == playerIdx)
+            {
+                printf(" >> %s owns this railway.\n", game->players[playerIdx].name);
+            }
+            else if (sq->data.railway.mortgaged)
+            {
+                printf(" >>%s is mortgaged. No rent paid.\n",sq->name);
+            }
+            else
+            {
+                // count how many railways the owner has
+                int stationCount = 0;
+                for (int i = 0; i < SQUARE_COUNT; i++) 
+                {
+                    if (game->board[i].type == SQUARE_RAILWAY && game->board[i].data.railway.owner == owner) 
+                    {
+                        stationCount++;
+                    }
+                }
+
+                int rent = 0;
+                if (stationCount == 1) rent = 250;
+                if (stationCount == 2) rent = 500;
+                if (stationCount == 3) rent = 1000;
+                if (stationCount == 4) rent = 2000;
+
+                game->players[playerIdx].cash -= rent;
+                game->players[owner].cash += rent;
+                printf("  >> %s paid LKR %d rent to %s (owns %d stations)\n", 
+                    game->players[playerIdx].name, rent, game->players[owner].name, stationCount);
+            }
             break;
+        }
 
         case SQUARE_UTILITY:
             // TODO
