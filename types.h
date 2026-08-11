@@ -74,14 +74,16 @@ typedef struct Property{
 
 typedef struct Railway{
     char name[40];
-
+    int purchasePrice;
+    int mortgageValue;
     int owner;
     int mortgaged;
 }Railway;
 
 typedef struct Utility{
     char name[50];
-
+    int purchasePrice;
+    int mortgageValue;
     int owner;
     int mortgaged;
 }Utility;

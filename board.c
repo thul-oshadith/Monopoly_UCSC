@@ -75,6 +75,8 @@ void init_Board(GameState *game) {
     strcpy(game->board[5].name, "Colombo Fort Railway Station");
 
     strcpy(game->board[5].data.railway.name, "Colombo Fort Railway Station");
+    game->board[5].data.railway.purchasePrice = 1500;
+    game->board[5].data.railway.mortgageValue = 750;
     game->board[5].data.railway.owner = -1;
     game->board[5].data.railway.mortgaged = 0;
 
@@ -182,6 +184,8 @@ void init_Board(GameState *game) {
     strcpy(game->board[12].name, "Ceylon Electricity Board");
 
     strcpy(game->board[12].data.utility.name, "Ceylon Electricity Board");
+    game->board[12].data.utility.purchasePrice = 1500;
+    game->board[12].data.utility.mortgageValue = 750;
     game->board[12].data.utility.owner = -1;
     game->board[12].data.utility.mortgaged = 0;
 
@@ -233,6 +237,8 @@ void init_Board(GameState *game) {
     strcpy(game->board[15].name, "Kandy Railway Station");
 
     strcpy(game->board[15].data.railway.name, "Kandy Railway Station");
+    game->board[15].data.railway.purchasePrice = 1500;
+    game->board[15].data.railway.mortgageValue = 750;
     game->board[15].data.railway.owner = -1;
     game->board[15].data.railway.mortgaged = 0;
 
@@ -385,6 +391,8 @@ void init_Board(GameState *game) {
     strcpy(game->board[25].name, "Galle Railway Station");
 
     strcpy(game->board[25].data.railway.name, "Galle Railway Station");
+    game->board[25].data.railway.purchasePrice = 1500;
+    game->board[25].data.railway.mortgageValue = 750;
     game->board[25].data.railway.owner = -1;
     game->board[25].data.railway.mortgaged = 0;
 
@@ -436,6 +444,8 @@ void init_Board(GameState *game) {
     strcpy(game->board[28].name, "National Water Supply and Drainage Board");
 
     strcpy(game->board[28].data.utility.name, "National Water Supply and Drainage Board");
+    game->board[28].data.utility.purchasePrice = 1500;
+    game->board[28].data.utility.mortgageValue = 750;
     game->board[28].data.utility.owner = -1;
     game->board[28].data.utility.mortgaged = 0;
 
@@ -541,6 +551,8 @@ void init_Board(GameState *game) {
     strcpy(game->board[35].name, "Jaffna Railway Station");
 
     strcpy(game->board[35].data.railway.name, "Jaffna Railway Station");
+    game->board[35].data.railway.purchasePrice = 1500;
+    game->board[35].data.railway.mortgageValue = 750;
     game->board[35].data.railway.owner = -1;
     game->board[35].data.railway.mortgaged = 0;
 
