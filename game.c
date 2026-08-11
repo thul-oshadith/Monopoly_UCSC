@@ -223,8 +223,8 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
                 }
                 game->players[playerIdx].cash -= rent;
                 game->players[owner].cash += rent;
-                printf("  >> %s paid LKR %d rent to %s (%dx dice roll of %d)\n", 
-                    game->players[playerIdx].name, rent, game->players[owner].name, utilityCount, diceTotal);
+                printf("  >> %s paid LKR %d rent to %s (owns %d utilities. Rolled %d)\n", 
+                    game->players[playerIdx].name, rent, game->players[owner].name, utilityCount,  diceTotal);
  
                 
             }
