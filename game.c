@@ -106,6 +106,95 @@ void decideTurnOrder(GameState *game) {
 }
 
 
+// Helper: checks if buying this property would complete a color set for the player
+int checkIfCompletesSet(GameState *game, int playerIdx, PropertyGroup group) {
+    if (group == NO_GROUP) return 0;
+    
+    int totalInGroup = 0;
+    int ownedByPlayer = 0;
+    
+    for (int i = 0; i < SQUARE_COUNT; i++) {
+        if (game->board[i].type == SQUARE_PROPERTY) {
+            Property *p = &game->board[i].data.property;
+            if (p->group == group) {
+                totalInGroup++;
+                if (p->owner == playerIdx) {
+                    ownedByPlayer++;
+                }
+            }
+        }
+    }
+    
+    // If buying THIS property makes owned == total, set is complete
+    return (ownedByPlayer + 1 == totalInGroup);
+}
+
+// AI Purchase Decision — each player has their own brain
+void attemptPurchase(GameState *game, int playerIdx, Square *sq, int purchasePrice, PropertyGroup group) {
+    Player *player = &game->players[playerIdx];
+    int buyDecision = 0;
+
+    // --- AGGRESSIVE INVESTOR ---
+    // Rule: "Always purchases if sufficient funds remain to pay at least one future rent"
+    // We use 100 (the cheapest rent on the board) as the minimum rent threshold
+    if (strcmp(player->name, "Aggressive Investor") == 0) {
+        if (player->cash - purchasePrice >= 100) {
+            buyDecision = 1;
+        }
+    }
+
+    // --- CONSERVATIVE BANKER ---
+    // Rule: "Purchases properties only if at least 50% of current cash remains after purchase"
+    // So: purchasePrice must be <= half of their current cash
+    else if (strcmp(player->name, "Conservative Banker") == 0) {
+        if (purchasePrice <= player->cash / 2) {
+            buyDecision = 1;
+        }
+    }
+
+    // --- RISK TAKER ---
+    // Rule: "Purchases every available property whenever legally possible"
+    // Simply: buy if they have the cash
+    else if (strcmp(player->name, "Risk Taker") == 0) {
+        if (player->cash >= purchasePrice) {
+            buyDecision = 1;
+        }
+    }
+
+    // --- OPPORTUNISTIC TRADER ---
+    // Rule: "Purchases only when projected appreciation exceeds construction costs"
+    // Placeholder: Buy if it completes a color set, OR if 30% of cash remains after purchase
+    // (We will refine this once the economic event system is built)
+    else if (strcmp(player->name, "Opportunistic Trader") == 0) {
+        int completesSet = 0;
+        if (sq->type == SQUARE_PROPERTY) {
+            completesSet = checkIfCompletesSet(game, playerIdx, group);
+        }
+        
+        if (completesSet) {
+            if (player->cash >= purchasePrice) {
+                buyDecision = 1;
+            }
+        } else if (player->cash - purchasePrice > player->cash * 3 / 10) {
+            buyDecision = 1;
+        }
+    }
+
+    // EXECUTE THE DECISION
+    if (buyDecision) {
+        player->cash -= purchasePrice;
+
+        if (sq->type == SQUARE_PROPERTY)  sq->data.property.owner = playerIdx;
+        else if (sq->type == SQUARE_RAILWAY) sq->data.railway.owner = playerIdx;
+        else if (sq->type == SQUARE_UTILITY) sq->data.utility.owner = playerIdx;
+
+        printf("  >> %s bought %s for LKR %d\n", player->name, sq->name, purchasePrice);
+    } else {
+        printf("  >> %s declined to buy %s. (Going to Auction)\n", player->name, sq->name);
+        // TODO: implement auction logic here later
+    }
+}
+
 void handleLanding(GameState *game, int playerIdx, int diceTotal) {
     int pos = game->players[playerIdx].position;
     Square *sq = &game->board[pos];  // pointer to the square they landed on
@@ -118,17 +207,9 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
 
         Property *prop = &sq->data.property;
         if (prop->owner == -1) {
-        // Unowned — player can buy it
-            if (game->players[playerIdx].cash >= prop->purchasePrice) {
-            game->players[playerIdx].cash -= prop->purchasePrice;
-            prop->owner = playerIdx;
-            printf("  >> %s bought %s for LKR %d\n",
-                game->players[playerIdx].name, prop->name, prop->purchasePrice);
-            } 
-            else {
-                printf("  >> %s can't afford %s (costs LKR %d)\n",
-                game->players[playerIdx].name, prop->name, prop->purchasePrice);
-            }
+         // New AI buying logic
+         attemptPurchase(game, playerIdx, sq, prop->purchasePrice, prop->group);
+            
         } 
         else if (prop->owner != playerIdx) {
         // Owned by someone else — pay rent
@@ -150,8 +231,8 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             int owner = sq->data.railway.owner;
             if (owner == -1)
             {
-                printf(" >> %s is unowned. (Can be bought!)\n", sq->name);
-                //  will add the purchasing logic later
+                // New AI buying logic
+                attemptPurchase(game, playerIdx, sq, sq->data.railway.purchasePrice, NO_GROUP);
             }
             else if (owner == playerIdx)
             {
@@ -191,7 +272,8 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             int owner = sq->data.utility.owner;
             if (owner == -1)
             {
-                printf(" >>%s is unowned (Can be bought!)\n",sq->name);
+                // New AI buying logic
+                attemptPurchase(game, playerIdx, sq, sq->data.utility.purchasePrice, NO_GROUP);
             }
             else if (owner == playerIdx)
             {
