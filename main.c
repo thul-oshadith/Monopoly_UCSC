@@ -91,6 +91,16 @@ int main(){
 
             handleLanding(&game , p, diceTotal);
 
+            // Check if 3 players are bankrupt — game over!
+            int bankruptCount = 0;
+            for (int i = 0; i < PLAYER_COUNT; i++) {
+                if (game.players[i].bankrupt) bankruptCount++;
+            }
+            if (bankruptCount >= 3) {
+                gameOver = 1;
+                break;
+            }
+
             int minGO = goCount[game.turnOrder[0]];
             for (int i = 1; i < PLAYER_COUNT; i++){
                 int idx = game.turnOrder[i];
@@ -112,6 +122,50 @@ int main(){
 
 
     }
+
+    // === END OF GAME SUMMARY ===
+    printf("\n========================================\n");
+    printf("         GAME OVER - FINAL RESULTS       \n");
+    printf("========================================\n\n");
+
+    // First pass: calculate net worth for each player and find the winner
+    int netWorths[PLAYER_COUNT] = {0};
+    int winnerIdx = -1;
+    int highestNetWorth = -1;
+
+    for (int i = 0; i < PLAYER_COUNT; i++) {
+        if (game.players[i].bankrupt) continue;
+
+        int propertyValue = 0;
+        for (int j = 0; j < SQUARE_COUNT; j++) {
+            if (game.board[j].type == SQUARE_PROPERTY && game.board[j].data.property.owner == i) {
+                propertyValue += game.board[j].data.property.purchasePrice;
+            } else if (game.board[j].type == SQUARE_RAILWAY && game.board[j].data.railway.owner == i) {
+                propertyValue += game.board[j].data.railway.purchasePrice;
+            } else if (game.board[j].type == SQUARE_UTILITY && game.board[j].data.utility.owner == i) {
+                propertyValue += game.board[j].data.utility.purchasePrice;
+            }
+        }
+
+        netWorths[i] = game.players[i].cash + propertyValue;
+        if (netWorths[i] > highestNetWorth) {
+            highestNetWorth = netWorths[i];
+            winnerIdx = i;
+        }
+    }
+
+    // Second pass: print the results
+    for (int i = 0; i < PLAYER_COUNT; i++) {
+        if (game.players[i].bankrupt) {
+            printf("  X %s -- BANKRUPT\n", game.players[i].name);
+        } else if (i == winnerIdx) {
+            printf("  >> WINNER: %s -- Net Worth: LKR %d\n", game.players[i].name, netWorths[i]);
+        } else {
+            printf("  %s -- Net Worth: LKR %d\n", game.players[i].name, netWorths[i]);
+        }
+    }
+
+    printf("\n========================================\n");
 
     return 0;
 

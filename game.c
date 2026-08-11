@@ -195,6 +195,51 @@ void attemptPurchase(GameState *game, int playerIdx, Square *sq, int purchasePri
     }
 }
 
+
+// Helper: Processes payments and handles bankruptcy if a player cannot pay
+void payAmount(GameState *game, int payerIdx, int payeeIdx, int amount) {
+    Player *payer = &game->players[payerIdx];
+    
+    // Does the player have enough cash?
+    if (payer->cash >= amount) {
+        payer->cash -= amount;
+        
+        // If they are paying another player (not the bank), give the payee the cash
+        if (payeeIdx != -1) {
+            game->players[payeeIdx].cash += amount;
+        }
+    } else {
+        // Player cannot afford the payment! (We will add Mortgage logic here later)
+        // For now, they go Bankrupt immediately.
+        
+        payer->bankrupt = 1;
+        payer->cash = 0; // Wipe their remaining cash
+        printf("\n  🚨🚨 %s is BANKRUPT! 🚨🚨\n", payer->name);
+        
+        // Return all their properties to the Bank
+        for (int i = 0; i < SQUARE_COUNT; i++) {
+            if (game->board[i].type == SQUARE_PROPERTY && game->board[i].data.property.owner == payerIdx) {
+                game->board[i].data.property.owner = -1;
+                game->board[i].data.property.mortgaged = 0; // Reset mortgage status
+                printf("  >> %s is returned to the Bank! (TODO: Auction)\n", game->board[i].name);
+            } 
+            else if (game->board[i].type == SQUARE_RAILWAY && game->board[i].data.railway.owner == payerIdx) {
+                game->board[i].data.railway.owner = -1;
+                game->board[i].data.railway.mortgaged = 0;
+                printf("  >> %s is returned to the Bank! (TODO: Auction)\n", game->board[i].name);
+            } 
+            else if (game->board[i].type == SQUARE_UTILITY && game->board[i].data.utility.owner == payerIdx) {
+                game->board[i].data.utility.owner = -1;
+                game->board[i].data.utility.mortgaged = 0;
+                printf("  >> %s is returned to the Bank! (TODO: Auction)\n", game->board[i].name);
+            }
+        }
+    }
+}
+
+
+
+
 void handleLanding(GameState *game, int playerIdx, int diceTotal) {
     int pos = game->players[playerIdx].position;
     Square *sq = &game->board[pos];  // pointer to the square they landed on
@@ -214,15 +259,14 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
         else if (prop->owner != playerIdx) {
         // Owned by someone else — pay rent
             int rent = prop->rent;
-            game->players[playerIdx].cash -= rent;
-            game->players[prop->owner].cash += rent;
-            printf("  >> %s paid LKR %d rent to %s\n",
-            game->players[playerIdx].name, rent, game->players[prop->owner].name);
-            }
+            printf("  >> %s must pay LKR %d rent to %s\n", 
+                game->players[playerIdx].name, rent, game->players[prop->owner].name);
+            payAmount(game, playerIdx, prop->owner, rent);
+        }
         else {
             // Player owns it — nothing happens
             printf("  >> %s owns this property.\n", game->players[playerIdx].name);
-            }
+        }
 
         break;
         }
@@ -260,10 +304,9 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
                 if (stationCount == 3) rent = 1000;
                 if (stationCount == 4) rent = 2000;
 
-                game->players[playerIdx].cash -= rent;
-                game->players[owner].cash += rent;
-                printf("  >> %s paid LKR %d rent to %s (owns %d stations)\n", 
+                printf("  >> %s must pay LKR %d rent to %s (owns %d stations)\n", 
                     game->players[playerIdx].name, rent, game->players[owner].name, stationCount);
+                payAmount(game, playerIdx, owner, rent);
             }
             break;
         }
@@ -303,21 +346,18 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
                 {
                     rent = diceTotal *10;
                 }
-                game->players[playerIdx].cash -= rent;
-                game->players[owner].cash += rent;
-                printf("  >> %s paid LKR %d rent to %s (owns %d utilities. Rolled %d)\n", 
-                    game->players[playerIdx].name, rent, game->players[owner].name, utilityCount,  diceTotal);
- 
+                printf("  >> %s must pay LKR %d rent to %s (owns %d utilities. Rolled %d)\n", 
+                    game->players[playerIdx].name, rent, game->players[owner].name, utilityCount, diceTotal);
+                payAmount(game, playerIdx, owner, rent);
                 
             }
             break;
         }
 
         case SQUARE_TAX:{
-            int tax =  sq->data.taxAmount;
-            game->players[playerIdx].cash -= tax;
-            printf("  >> %s paid LKR %d in tax\n",game->players[playerIdx].name, tax);
-            
+            int tax = sq->data.taxAmount;
+            printf("  >> %s must pay LKR %d in tax\n", game->players[playerIdx].name, tax);
+            payAmount(game, playerIdx, -1, tax); // -1 means they pay the bank!
             break;
         }
 
