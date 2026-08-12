@@ -22,5 +22,9 @@ int checkIfCompletesSet(GameState *game, int playerIdx, PropertyGroup group) {
     }
     
     // If buying THIS property makes owned == total, set is complete
-    return (ownedByPlayer + 1 == totalInGroup);
+    if (ownedByPlayer + 1 == totalInGroup) {
+        return 1; // Yes, it completes the set
+    } else {
+        return 0; // No, set is not complete
+    }
 }
