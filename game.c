@@ -129,10 +129,17 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
         } 
         else if (prop->owner != playerIdx) {
         // Owned by someone else — pay rent
-            int rent = prop->rent;
+            int multiplier = 1;
+            if (prop->hotel == 1) multiplier = 10;
+            else if (prop->houses == 1) multiplier = 2;
+            else if (prop->houses == 2) multiplier = 3;
+            else if (prop->houses == 3) multiplier = 5;
+            else if (prop->houses == 4) multiplier = 7;
+
+            int effectiveRent = prop->rent * multiplier;
             printf("  >> %s must pay LKR %d rent to %s\n", 
-                game->players[playerIdx].name, rent, game->players[prop->owner].name);
-            payAmount(game, playerIdx, prop->owner, rent);
+                game->players[playerIdx].name, effectiveRent, game->players[prop->owner].name);
+            payAmount(game, playerIdx, prop->owner, effectiveRent);
         }
         else {
             // Player owns it — nothing happens

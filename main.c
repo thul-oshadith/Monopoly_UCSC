@@ -7,6 +7,7 @@ void init_Board(GameState *game);
 void init_Players(GameState *game);
 void decideTurnOrder(GameState *game);
 void handleLanding(GameState *game, int playerIdx, int diceTotal);
+void developProperties(GameState *game, int playerIdx);
 
 int main(){
     srand(time(NULL)); // seed random numbers for dice
@@ -90,6 +91,7 @@ int main(){
             diceTotal, game.board[newPosition].name,  newPosition);
 
             handleLanding(&game , p, diceTotal);
+            developProperties(&game, p);
 
             // Check if 3 players are bankrupt — game over!
             int bankruptCount = 0;

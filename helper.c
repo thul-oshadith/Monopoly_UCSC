@@ -28,3 +28,25 @@ int checkIfCompletesSet(GameState *game, int playerIdx, PropertyGroup group) {
         return 0; // No, set is not complete
     }
 }
+
+// Helper: checks if the player already owns the entire color set (for building houses)
+int hasMonopoly(GameState *game, int playerIdx, PropertyGroup group) {
+    if (group == NO_GROUP) return 0;
+    
+    int totalInGroup = 0;
+    int ownedByPlayer = 0;
+    
+    for (int i = 0; i < SQUARE_COUNT; i++) {
+        if (game->board[i].type == SQUARE_PROPERTY) {
+            Property *p = &game->board[i].data.property;
+            if (p->group == group) {
+                totalInGroup++;
+                if (p->owner == playerIdx) {
+                    ownedByPlayer++;
+                }
+            }
+        }
+    }
+    
+    return (totalInGroup > 0 && ownedByPlayer == totalInGroup);
+}
