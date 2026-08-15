@@ -4,6 +4,7 @@
 
 // Forward declaration
 int hasMonopoly(GameState *game, int playerIdx, PropertyGroup group);
+int applyEventHouseCostModifier(GameState *game, int cost);
 
 // Finds the property in the group with the fewest buildings (to enforce even-build rule)
 // Returns the square index, or -1 if all are fully upgraded to hotels
@@ -80,6 +81,7 @@ void developProperties(GameState *game, int playerIdx) {
                 } else {
                     cost = prop->houseCost;   // Next step is a house
                 }
+                cost = applyEventHouseCostModifier(game, cost);
                 
                 // --- AI DECISION: Should we build? ---
                 int buildDecision = 0;
@@ -99,7 +101,14 @@ void developProperties(GameState *game, int playerIdx) {
                 // --- CONSERVATIVE BANKER ---
                 // Build cautiously, maintain 50% cash reserve
                 else if (strcmp(player->name, "Conservative Banker") == 0) {
-                    if (player->cash - cost >= player->cash / 2) buildDecision = 1;
+                    if (player->cash - cost >= player->cash / 2) {
+                        // Never develops hotels until all outstanding loans have been settled
+                        if (prop->houses == 4 && player->activeLoan.active) {
+                            buildDecision = 0;
+                        } else {
+                            buildDecision = 1;
+                        }
+                    }
                 }
                 
                 // --- OPPORTUNISTIC TRADER ---

@@ -40,6 +40,25 @@ typedef enum InsuranceType{
       BUSINESS_INTERRUPTION
 } InsuranceType;
 
+typedef struct Loan{
+    int amount;
+    float interestRate;
+    int remainingRounds;
+    int active;
+}Loan;
+
+typedef enum EconomicEvent{
+    EVENT_NONE,
+    EVENT_TOURISM_BOOM,
+    EVENT_FUEL_CRISIS,
+    EVENT_HEAVY_MONSOON,
+    EVENT_ECONOMIC_RECESSION,
+    EVENT_STOCK_MARKET_BOOM,
+    EVENT_GOVERNMENT_HOUSING,
+    EVENT_FOREIGN_INVESTMENT,
+    EVENT_POLITICAL_UNREST
+} EconomicEvent;
+
 typedef struct Player{
     char name[30];
     int position;
@@ -48,6 +67,7 @@ typedef struct Player{
     int jailTurns;
     int bankrupt;
     int turnOrder;
+    Loan activeLoan; // Added active loan
 
 }Player;
 
@@ -65,6 +85,11 @@ typedef struct Property{
     int owner;
 
     int mortgaged;
+    int loanLocked; // Added loan lock status
+
+    int isCoastal;
+    int isSouthernCoastal;
+    int isCommercial;
 
     InsuranceType insurance;
 
@@ -78,6 +103,7 @@ typedef struct Railway{
     int mortgageValue;
     int owner;
     int mortgaged;
+    int loanLocked; // Added loan lock status
 }Railway;
 
 typedef struct Utility{
@@ -86,6 +112,7 @@ typedef struct Utility{
     int mortgageValue;
     int owner;
     int mortgaged;
+    int loanLocked; // Added loan lock status
 }Utility;
 
 typedef struct Square{
@@ -101,14 +128,6 @@ typedef struct Square{
         int jailBailAmount;
     } data;
 }Square;
-
-typedef struct Loan{
-    int borrower;
-    int amount;
-    float interestRate;
-    int remainingRounds;
-    int active;
-}Loan;
 
 typedef struct Policy{
     int propertyID;
@@ -135,7 +154,8 @@ typedef struct GameState{
     double bankMoney;
     int turnOrder[PLAYER_COUNT];
     
-}GameState;
+    EconomicEvent currentEvent;
 
+}GameState;
 
 #endif

@@ -12,6 +12,9 @@ void init_Players(GameState *game){
  game->players[0].jailTurns = 0;
  game->players[0].bankrupt = 0;
  game->players[0].turnOrder = 0;
+ game->players[0].activeLoan.active = 0;
+ game->players[0].activeLoan.amount = 0;
+ game->players[0].activeLoan.remainingRounds = 0;
 
  //    Player 02
  strcpy(game->players[1].name, "Conservative Banker");
@@ -21,6 +24,9 @@ void init_Players(GameState *game){
  game->players[1].jailTurns = 0;
  game->players[1].bankrupt = 0;
  game->players[1].turnOrder = 0;
+ game->players[1].activeLoan.active = 0;
+ game->players[1].activeLoan.amount = 0;
+ game->players[1].activeLoan.remainingRounds = 0;
 
 strcpy(game->players[2].name, "Risk Taker");
  game->players[2].position = 0;
@@ -29,6 +35,9 @@ strcpy(game->players[2].name, "Risk Taker");
  game->players[2].jailTurns = 0;
  game->players[2].bankrupt = 0;
  game->players[2].turnOrder = 0;
+ game->players[2].activeLoan.active = 0;
+ game->players[2].activeLoan.amount = 0;
+ game->players[2].activeLoan.remainingRounds = 0;
 
  strcpy(game->players[3].name, "Opportunistic Trader");
  game->players[3].position = 0;
@@ -37,6 +46,9 @@ strcpy(game->players[2].name, "Risk Taker");
  game->players[3].jailTurns = 0;
  game->players[3].bankrupt = 0;
  game->players[3].turnOrder = 0;
+ game->players[3].activeLoan.active = 0;
+ game->players[3].activeLoan.amount = 0;
+ game->players[3].activeLoan.remainingRounds = 0;
 
 
 }

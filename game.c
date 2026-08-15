@@ -108,7 +108,9 @@ void decideTurnOrder(GameState *game) {
 
 // Forward declarations for functions in finance.c and helper.c
 void attemptPurchase(GameState *game, int playerIdx, Square *sq, int purchasePrice, PropertyGroup group);
+void handleBankSquare(GameState *game, int playerIdx);
 void payAmount(GameState *game, int payerIdx, int payeeIdx, int amount);
+int applyEventRentModifier(GameState *game, int sqIdx, int rent, int isHotel);
 
 
 void handleLanding(GameState *game, int playerIdx, int diceTotal) {
@@ -135,8 +137,8 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             else if (prop->houses == 2) multiplier = 3;
             else if (prop->houses == 3) multiplier = 5;
             else if (prop->houses == 4) multiplier = 7;
-
             int effectiveRent = prop->rent * multiplier;
+            effectiveRent = applyEventRentModifier(game, sq->index, effectiveRent, prop->hotel);
             printf("  >> %s must pay LKR %d rent to %s\n", 
                 game->players[playerIdx].name, effectiveRent, game->players[prop->owner].name);
             payAmount(game, playerIdx, prop->owner, effectiveRent);
@@ -181,6 +183,8 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
                 if (stationCount == 2) rent = 500;
                 if (stationCount == 3) rent = 1000;
                 if (stationCount == 4) rent = 2000;
+                
+                rent = applyEventRentModifier(game, sq->index, rent, 0);
 
                 printf("  >> %s must pay LKR %d rent to %s (owns %d stations)\n", 
                     game->players[playerIdx].name, rent, game->players[owner].name, stationCount);
@@ -224,6 +228,7 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
                 {
                     rent = diceTotal *10;
                 }
+                rent = applyEventRentModifier(game, sq->index, rent, 0);
                 printf("  >> %s must pay LKR %d rent to %s (owns %d utilities. Rolled %d)\n", 
                     game->players[playerIdx].name, rent, game->players[owner].name, utilityCount, diceTotal);
                 payAmount(game, playerIdx, owner, rent);
@@ -257,7 +262,8 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             break;
 
         case SQUARE_BANK:
-            // TODO
+            printf("  >> %s visited the Bank.\n", game->players[playerIdx].name);
+            handleBankSquare(game, playerIdx);
             break;
 
         case SQUARE_INSURANCE:

@@ -6,6 +6,9 @@
 int checkIfCompletesSet(GameState *game, int playerIdx, PropertyGroup group);
 void startAuction(GameState *game, int sqIdx);
 
+int applyEventValueModifier(GameState *game, int sqIdx, int value);
+float applyEventLoanInterest(GameState *game, float baseInterest);
+
 // AI Purchase Decision — each player has their own brain
 void attemptPurchase(GameState *game, int playerIdx, Square *sq, int purchasePrice, PropertyGroup group) {
     Player *player = &game->players[playerIdx];
@@ -199,6 +202,193 @@ void payAmount(GameState *game, int payerIdx, int payeeIdx, int amount) {
                 game->board[i].data.utility.mortgaged = 0;
                 printf("  >> %s is returned to the Bank! (Auctioning...)\n", game->board[i].name);
                 startAuction(game, i);
+            }
+        }
+    }
+}
+
+// Calculate max loan available for player based on eligible un-locked, un-mortgaged collateral
+int calculateMaxLoan(GameState *game, int playerIdx) {
+    int totalMortgageValue = 0;
+    for (int i = 0; i < SQUARE_COUNT; i++) {
+        Square *sq = &game->board[i];
+        if (sq->type == SQUARE_PROPERTY && sq->data.property.owner == playerIdx && !sq->data.property.mortgaged && !sq->data.property.loanLocked) {
+            totalMortgageValue += applyEventValueModifier(game, i, sq->data.property.mortgageValue);
+        } else if (sq->type == SQUARE_RAILWAY && sq->data.railway.owner == playerIdx && !sq->data.railway.mortgaged && !sq->data.railway.loanLocked) {
+            totalMortgageValue += applyEventValueModifier(game, i, sq->data.railway.mortgageValue);
+        } else if (sq->type == SQUARE_UTILITY && sq->data.utility.owner == playerIdx && !sq->data.utility.mortgaged && !sq->data.utility.loanLocked) {
+            totalMortgageValue += applyEventValueModifier(game, i, sq->data.utility.mortgageValue);
+        }
+    }
+    return (totalMortgageValue * 75) / 100;
+}
+
+// Lock properties until amount is reached
+void takeLoan(GameState *game, int playerIdx, int amountToBorrow) {
+    Player *p = &game->players[playerIdx];
+    int collateralNeeded = (amountToBorrow * 100) / 75; 
+    int collateralLocked = 0;
+
+    for (int i = 0; i < SQUARE_COUNT; i++) {
+        if (collateralLocked >= collateralNeeded) break;
+
+        Square *sq = &game->board[i];
+        if (sq->type == SQUARE_PROPERTY && sq->data.property.owner == playerIdx && !sq->data.property.mortgaged && !sq->data.property.loanLocked) {
+            sq->data.property.loanLocked = 1;
+            collateralLocked += applyEventValueModifier(game, i, sq->data.property.mortgageValue);
+        } else if (sq->type == SQUARE_RAILWAY && sq->data.railway.owner == playerIdx && !sq->data.railway.mortgaged && !sq->data.railway.loanLocked) {
+            sq->data.railway.loanLocked = 1;
+            collateralLocked += applyEventValueModifier(game, i, sq->data.railway.mortgageValue);
+        } else if (sq->type == SQUARE_UTILITY && sq->data.utility.owner == playerIdx && !sq->data.utility.mortgaged && !sq->data.utility.loanLocked) {
+            sq->data.utility.loanLocked = 1;
+            collateralLocked += applyEventValueModifier(game, i, sq->data.utility.mortgageValue);
+        }
+    }
+
+    p->activeLoan.amount = amountToBorrow;
+    p->activeLoan.interestRate = applyEventLoanInterest(game, 0.08f); // 8% default modified by events
+    p->activeLoan.remainingRounds = 20;
+    p->activeLoan.active = 1;
+    p->cash += amountToBorrow;
+    printf("  >> %s took a loan of LKR %d (20 rounds at %.0f%%).\n", p->name, amountToBorrow, p->activeLoan.interestRate * 100);
+}
+
+// Unlocks properties
+void unlockCollateral(GameState *game, int playerIdx) {
+    for (int i = 0; i < SQUARE_COUNT; i++) {
+        Square *sq = &game->board[i];
+        if (sq->type == SQUARE_PROPERTY && sq->data.property.owner == playerIdx) {
+            sq->data.property.loanLocked = 0;
+        } else if (sq->type == SQUARE_RAILWAY && sq->data.railway.owner == playerIdx) {
+            sq->data.railway.loanLocked = 0;
+        } else if (sq->type == SQUARE_UTILITY && sq->data.utility.owner == playerIdx) {
+            sq->data.utility.loanLocked = 0;
+        }
+    }
+}
+
+// Repay the loan
+void repayLoan(GameState *game, int playerIdx) {
+    Player *p = &game->players[playerIdx];
+    if (!p->activeLoan.active) return;
+
+    if (p->cash >= p->activeLoan.amount) {
+        p->cash -= p->activeLoan.amount;
+        printf("  >> %s repaid their loan of LKR %d!\n", p->name, p->activeLoan.amount);
+        p->activeLoan.active = 0;
+        p->activeLoan.amount = 0;
+        unlockCollateral(game, playerIdx);
+    }
+}
+
+// Handle Bank Square logic (AI Behaviors)
+void handleBankSquare(GameState *game, int playerIdx) {
+    Player *p = &game->players[playerIdx];
+    int maxLoan = calculateMaxLoan(game, playerIdx);
+    
+    if (strcmp(p->name, "Aggressive Investor") == 0) {
+        if (p->activeLoan.active) {
+            if (p->cash > (2 * p->activeLoan.amount)) {
+                repayLoan(game, playerIdx);
+            }
+        } else {
+            if (p->cash < 500 && maxLoan >= 1000) {
+                takeLoan(game, playerIdx, maxLoan);
+            }
+        }
+    } else if (strcmp(p->name, "Conservative Banker") == 0) {
+        if (p->activeLoan.active) {
+            if (p->cash >= p->activeLoan.amount) {
+                repayLoan(game, playerIdx);
+            }
+        } else {
+            if (p->cash < 200 && maxLoan > 0) {
+                takeLoan(game, playerIdx, maxLoan);
+            }
+        }
+    } else if (strcmp(p->name, "Risk Taker") == 0) {
+        if (p->activeLoan.active) {
+            unlockCollateral(game, playerIdx);
+            int newMax = calculateMaxLoan(game, playerIdx);
+            if (newMax > p->activeLoan.amount) {
+                printf("  >> %s refinanced their loan!\n", p->name);
+                int difference = newMax - p->activeLoan.amount;
+                p->cash += difference;
+                takeLoan(game, playerIdx, newMax); // Overwrites old loan
+            } else {
+                takeLoan(game, playerIdx, p->activeLoan.amount); // Re-lock
+            }
+        } else {
+            if (maxLoan > 0) {
+                takeLoan(game, playerIdx, maxLoan);
+            }
+        }
+    } else if (strcmp(p->name, "Opportunistic Trader") == 0) {
+        // To be provided later
+    }
+}
+
+// Process loans at the end of every complete round
+void processEndRoundLoans(GameState *game) {
+    for (int i = 0; i < PLAYER_COUNT; i++) {
+        Player *p = &game->players[i];
+        if (p->bankrupt) continue;
+
+        if (p->activeLoan.active) {
+            // Add interest (Rule-LK 4)
+            int interest = (int)(p->activeLoan.amount * p->activeLoan.interestRate);
+            p->activeLoan.amount += interest;
+            p->activeLoan.remainingRounds--;
+
+            // Default check (Rule-LK 6)
+            if (p->activeLoan.remainingRounds <= 0) {
+                printf("\n======================================================\n");
+                printf("  >> LOAN DEFAULT: %s failed to repay their loan within the duration!\n", p->name);
+                
+                int hasRemainingAssets = 0;
+                // Foreclose pledged assets and check for remaining assets
+                for (int j = 0; j < SQUARE_COUNT; j++) {
+                    Square *sq = &game->board[j];
+                    if (sq->type == SQUARE_PROPERTY && sq->data.property.owner == i) {
+                        if (sq->data.property.loanLocked) {
+                            sq->data.property.owner = -1;
+                            sq->data.property.loanLocked = 0;
+                            sq->data.property.houses = 0; // Demolished
+                            sq->data.property.hotel = 0;
+                            sq->data.property.insurance = NONE;
+                        } else {
+                            hasRemainingAssets = 1;
+                        }
+                    } else if (sq->type == SQUARE_RAILWAY && sq->data.railway.owner == i) {
+                        if (sq->data.railway.loanLocked) {
+                            sq->data.railway.owner = -1;
+                            sq->data.railway.loanLocked = 0;
+                        } else {
+                            hasRemainingAssets = 1;
+                        }
+                    } else if (sq->type == SQUARE_UTILITY && sq->data.utility.owner == i) {
+                        if (sq->data.utility.loanLocked) {
+                            sq->data.utility.owner = -1;
+                            sq->data.utility.loanLocked = 0;
+                        } else {
+                            hasRemainingAssets = 1;
+                        }
+                    }
+                }
+
+                // Outstanding debt is cleared
+                p->activeLoan.active = 0;
+                p->activeLoan.amount = 0;
+                printf("  >> All Loan Locked properties foreclosed to the Bank. Outstanding debt cleared.\n");
+
+                // Check for bankruptcy (Rule-LK 7)
+                if (p->cash <= 0 && !hasRemainingAssets) {
+                    p->bankrupt = 1;
+                    printf("  >> %s has no remaining assets and is declared BANKRUPT!\n", p->name);
+                } else {
+                    printf("  >> %s continues the game using remaining assets.\n", p->name);
+                }
+                printf("======================================================\n\n");
             }
         }
     }

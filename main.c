@@ -8,10 +8,14 @@ void init_Players(GameState *game);
 void decideTurnOrder(GameState *game);
 void handleLanding(GameState *game, int playerIdx, int diceTotal);
 void developProperties(GameState *game, int playerIdx);
+void attemptPurchase(GameState *game, int playerIdx, Square *sq, int purchasePrice, PropertyGroup group);
+void processEndRoundLoans(GameState *game);
 
 int main(){
     srand(time(NULL)); // seed random numbers for dice
     GameState game;
+    game.currentEvent = EVENT_NONE;
+    game.currentRound = 0;
     
     //Setting up the game
     init_Board(&game);
@@ -122,6 +126,46 @@ int main(){
 
         }
 
+        // Process loans at the end of the round
+        processEndRoundLoans(&game);
+        game.currentRound++;
+
+        // Process Economic Events (Rule-LK 18)
+        if (game.currentRound > 0 && game.currentRound % 15 == 0) {
+            game.currentEvent = (EconomicEvent)(rand() % 8 + 1); // Random event from 1 to 8
+            printf("\n======================================================\n");
+            printf("  >>> NATIONAL ECONOMIC EVENT TRIGGERED! <<<\n");
+            
+            switch (game.currentEvent) {
+                case EVENT_TOURISM_BOOM:
+                    printf("  Event: TOURISM BOOM\n  Hotels receive double rent. Southern coastal properties increase by 15%%.\n");
+                    break;
+                case EVENT_FUEL_CRISIS:
+                    printf("  Event: FUEL CRISIS\n  Railway rent doubles. Property development costs increase 20%%.\n");
+                    break;
+                case EVENT_HEAVY_MONSOON:
+                    printf("  Event: HEAVY MONSOON\n  Flood risk increases. Insurance premiums increase. Coastal properties lose 10%% value.\n");
+                    break;
+                case EVENT_ECONOMIC_RECESSION:
+                    printf("  Event: ECONOMIC RECESSION\n  Property values decrease 15%%. Rent decreases 10%%. Loan interest increases by 15%%.\n");
+                    break;
+                case EVENT_STOCK_MARKET_BOOM:
+                    printf("  Event: STOCK MARKET BOOM\n  Property values increase 10%%. Loan interest decreases by 10%%.\n");
+                    break;
+                case EVENT_GOVERNMENT_HOUSING:
+                    printf("  Event: GOVERNMENT HOUSING PROGRAMME\n  House construction costs reduce 25%%.\n");
+                    break;
+                case EVENT_FOREIGN_INVESTMENT:
+                    printf("  Event: FOREIGN INVESTMENT\n  Commercial properties increase 20%%.\n");
+                    break;
+                case EVENT_POLITICAL_UNREST:
+                    printf("  Event: POLITICAL UNREST\n  Riot probability doubles. Hotel rent drops by 50%%. Business interruption claims increase.\n");
+                    break;
+                default:
+                    break;
+            }
+            printf("======================================================\n\n");
+        }
 
     }
 
