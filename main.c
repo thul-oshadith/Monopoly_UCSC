@@ -8,8 +8,10 @@ void init_Players(GameState *game);
 void decideTurnOrder(GameState *game);
 void handleLanding(GameState *game, int playerIdx, int diceTotal);
 void developProperties(GameState *game, int playerIdx);
+void performMaintenance(GameState *game, int playerIdx);
 void attemptPurchase(GameState *game, int playerIdx, Square *sq, int purchasePrice, PropertyGroup group);
 void processEndRoundLoans(GameState *game);
+void processDepreciation(GameState *game);
 
 int main(){
     srand(time(NULL)); // seed random numbers for dice
@@ -44,6 +46,9 @@ int main(){
             if(game.players[p].bankrupt){
                 continue;
             }
+
+            // Rule 27: Maintenance at the start of the turn
+            performMaintenance(&game, p);
 
             int die1 = rand() % 6 + 1;
             int die2 = rand() % 6 + 1;
@@ -134,8 +139,9 @@ int main(){
 
         }
 
-        // Process loans at the end of the round
+        // Process loans and depreciation at the end of the round
         processEndRoundLoans(&game);
+        processDepreciation(&game);
         game.currentRound++;
 
         // Process Economic Events (Rule-LK 18)

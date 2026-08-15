@@ -7,6 +7,7 @@ int checkIfCompletesSet(GameState *game, int playerIdx, PropertyGroup group);
 void startAuction(GameState *game, int sqIdx);
 
 int applyEventValueModifier(GameState *game, int sqIdx, int value);
+int applyDepreciationModifier(GameState *game, int sqIdx, int value);
 float applyEventLoanInterest(GameState *game, float baseInterest);
 
 // AI Purchase Decision — each player has their own brain
@@ -213,7 +214,7 @@ int calculateMaxLoan(GameState *game, int playerIdx) {
     for (int i = 0; i < SQUARE_COUNT; i++) {
         Square *sq = &game->board[i];
         if (sq->type == SQUARE_PROPERTY && sq->data.property.owner == playerIdx && !sq->data.property.mortgaged && !sq->data.property.loanLocked) {
-            totalMortgageValue += applyEventValueModifier(game, i, sq->data.property.mortgageValue);
+            totalMortgageValue += applyDepreciationModifier(game, i, applyEventValueModifier(game, i, sq->data.property.mortgageValue));
         } else if (sq->type == SQUARE_RAILWAY && sq->data.railway.owner == playerIdx && !sq->data.railway.mortgaged && !sq->data.railway.loanLocked) {
             totalMortgageValue += applyEventValueModifier(game, i, sq->data.railway.mortgageValue);
         } else if (sq->type == SQUARE_UTILITY && sq->data.utility.owner == playerIdx && !sq->data.utility.mortgaged && !sq->data.utility.loanLocked) {
@@ -235,7 +236,7 @@ void takeLoan(GameState *game, int playerIdx, int amountToBorrow) {
         Square *sq = &game->board[i];
         if (sq->type == SQUARE_PROPERTY && sq->data.property.owner == playerIdx && !sq->data.property.mortgaged && !sq->data.property.loanLocked) {
             sq->data.property.loanLocked = 1;
-            collateralLocked += applyEventValueModifier(game, i, sq->data.property.mortgageValue);
+            collateralLocked += applyDepreciationModifier(game, i, applyEventValueModifier(game, i, sq->data.property.mortgageValue));
         } else if (sq->type == SQUARE_RAILWAY && sq->data.railway.owner == playerIdx && !sq->data.railway.mortgaged && !sq->data.railway.loanLocked) {
             sq->data.railway.loanLocked = 1;
             collateralLocked += applyEventValueModifier(game, i, sq->data.railway.mortgageValue);

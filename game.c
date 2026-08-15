@@ -4,6 +4,12 @@
 #include <string.h>
 #include "types.h"
 
+// Depreciation Constants (shared with economy.c)
+#define DEPRECIATION_GRACE_ROUNDS 50
+#define DEPRECIATION_INTERVAL 5
+#define MAX_DEPRECIATION_PERCENT 30
+#define STRUCTURAL_DAMAGE_PENALTY 15
+
 // Recursive function to handle rolling and ties
 void rankPlayers(GameState *game, int candidates[], int count, int *resultPos, int isReroll) {
     // Base cases to stop recursion
@@ -139,13 +145,69 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             else if (prop->houses == 4) multiplier = 7;
             int effectiveRent = prop->rent * multiplier;
             effectiveRent = applyEventRentModifier(game, sq->index, effectiveRent, prop->hotel);
-            printf("  >> %s must pay LKR %d rent to %s\n", 
-                game->players[playerIdx].name, effectiveRent, game->players[prop->owner].name);
-            payAmount(game, playerIdx, prop->owner, effectiveRent);
+
+            // 1. Apply Property Depreciation (Rules 15-16)
+            if (prop->propertyAge > DEPRECIATION_GRACE_ROUNDS) {
+                int depPercent = (prop->propertyAge - DEPRECIATION_GRACE_ROUNDS) / DEPRECIATION_INTERVAL;
+                if (depPercent > MAX_DEPRECIATION_PERCENT) depPercent = MAX_DEPRECIATION_PERCENT; // Max 30%
+                int remainingPercent = 100 - depPercent;
+                effectiveRent = effectiveRent * remainingPercent / 100;
+            }
+
+            // 2. Apply Building Condition (Rule 26)
+            if (prop->houses > 0 || prop->hotel > 0) {
+                if (prop->buildingCondition >= 75 && prop->buildingCondition <= 89) {
+                    effectiveRent = effectiveRent * 90 / 100;
+                } else if (prop->buildingCondition >= 50 && prop->buildingCondition <= 74) {
+                    effectiveRent = effectiveRent * 75 / 100;
+                } else if (prop->buildingCondition >= 25 && prop->buildingCondition <= 49) {
+                    effectiveRent = effectiveRent * 50 / 100;
+                } else if (prop->buildingCondition < 25) {
+                    effectiveRent = 0; // Building closed
+                }
+            }
+
+            // 3. Apply Structural Damage Penalty (Rule 28)
+            if (prop->hasStructuralDamage) {
+                int remainingPercent = 100 - (STRUCTURAL_DAMAGE_PENALTY + 10); // -25% for rent
+                effectiveRent = effectiveRent * remainingPercent / 100;
+            }
+
+            if (effectiveRent > 0) {
+                printf("  >> %s must pay LKR %d rent to %s\n", 
+                    game->players[playerIdx].name, effectiveRent, game->players[prop->owner].name);
+                payAmount(game, playerIdx, prop->owner, effectiveRent);
+            } else {
+                printf("  >> %s pays no rent because the building is closed due to poor condition!\n", game->players[playerIdx].name);
+            }
         }
         else {
-            // Player owns it — nothing happens
+            // Player owns it — check if they want to renovate the land (Rule-LK 17)
             printf("  >> %s owns this property.\n", game->players[playerIdx].name);
+            if (prop->propertyAge > DEPRECIATION_GRACE_ROUNDS) {
+                int depPercent = (prop->propertyAge - DEPRECIATION_GRACE_ROUNDS) / DEPRECIATION_INTERVAL;
+                if (depPercent > MAX_DEPRECIATION_PERCENT) depPercent = MAX_DEPRECIATION_PERCENT;
+
+                int renovateDecision = 0;
+                char *pname = game->players[playerIdx].name;
+
+                if (strcmp(pname, "Opportunistic Trader") == 0 && depPercent > 15) renovateDecision = 1;
+                else if (strcmp(pname, "Conservative Banker") == 0 && depPercent > 10) renovateDecision = 1;
+                else if (depPercent >= MAX_DEPRECIATION_PERCENT) renovateDecision = 1; // Risk Taker / Aggressive Investor wait till max
+
+                if (renovateDecision) {
+                    int remainingPercent = 100 - depPercent;
+                    int marketValue = prop->purchasePrice * remainingPercent / 100;
+                    if (prop->hasStructuralDamage) marketValue = marketValue * (100 - STRUCTURAL_DAMAGE_PENALTY) / 100;
+                    
+                    int cost = marketValue * 10 / 100; // 10% of current market value
+                    if (game->players[playerIdx].cash >= cost) {
+                        game->players[playerIdx].cash -= cost;
+                        prop->propertyAge = 0;
+                        printf("  >>> %s renovated the property %s for LKR %d, restoring its value!\n", pname, prop->name, cost);
+                    }
+                }
+            }
         }
 
         break;

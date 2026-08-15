@@ -95,6 +95,11 @@ typedef struct Property{
 
     int houses;
     int hotel;
+
+    int buildingCondition;
+    int roundsUnmaintained;
+    int hasStructuralDamage;
+    int propertyAge;
 }Property;
 
 typedef struct Railway{

@@ -1,5 +1,12 @@
 #include "types.h"
+#include <stdio.h>
 
+// Depreciation Constants (Rule-LK 15-16, 28)
+#define DEPRECIATION_GRACE_ROUNDS 50
+#define DEPRECIATION_INTERVAL 5
+#define MAX_DEPRECIATION_PERCENT 30
+#define STRUCTURAL_DAMAGE_PENALTY 15
+#define STRUCTURAL_DAMAGE_THRESHOLD 20
 // Modifies the base rent of a property based on active economic events
 int applyEventRentModifier(GameState *game, int sqIdx, int rent, int isHotel) {
     Square *sq = &game->board[sqIdx];
@@ -47,6 +54,32 @@ int applyEventValueModifier(GameState *game, int sqIdx, int value) {
     return value;
 }
 
+// Applies property depreciation and structural damage penalties (Rules 15-16, 28)
+int applyDepreciationModifier(GameState *game, int sqIdx, int value) {
+    Square *sq = &game->board[sqIdx];
+
+    if (sq->type == SQUARE_PROPERTY) {
+        Property *prop = &sq->data.property;
+
+        // Property Depreciation (Rules 15-16): value drops after grace period
+        if (prop->propertyAge > DEPRECIATION_GRACE_ROUNDS) {
+            int depPercent = (prop->propertyAge - DEPRECIATION_GRACE_ROUNDS) / DEPRECIATION_INTERVAL;
+            if (depPercent > MAX_DEPRECIATION_PERCENT) depPercent = MAX_DEPRECIATION_PERCENT;
+
+            int remainingPercent = 100 - depPercent;
+            value = (value * remainingPercent) / 100;
+        }
+
+        // Building Structural Damage (Rule 28): additional penalty
+        if (prop->hasStructuralDamage) {
+            int remainingPercent = 100 - STRUCTURAL_DAMAGE_PENALTY;
+            value = (value * remainingPercent) / 100;
+        }
+    }
+
+    return value;
+}
+
 // Modifies house building costs
 int applyEventHouseCostModifier(GameState *game, int cost) {
     if (game->currentEvent == EVENT_FUEL_CRISIS) {
@@ -66,4 +99,32 @@ float applyEventLoanInterest(GameState *game, float baseInterest) {
         return rate < 0 ? 0.0f : rate;
     }
     return baseInterest;
+}
+
+// Processes end-of-round depreciation for properties and buildings
+void processDepreciation(GameState *game) {
+    for (int i = 0; i < SQUARE_COUNT; i++) {
+        if (game->board[i].type == SQUARE_PROPERTY) {
+            Property *prop = &game->board[i].data.property;
+            
+            // Property Depreciation (Rule-LK 15): increase age if owned
+            if (prop->owner != -1) {
+                prop->propertyAge++;
+            }
+
+            // Building Depreciation (Rule-LK 25-28): deteriorate if buildings exist
+            if (prop->houses > 0 || prop->hotel > 0) {
+                prop->buildingCondition -= 2;
+                if (prop->buildingCondition < 0) prop->buildingCondition = 0;
+                
+                prop->roundsUnmaintained++;
+                
+                // Rule-LK 28: Structural damage after threshold
+                if (prop->roundsUnmaintained > STRUCTURAL_DAMAGE_THRESHOLD && prop->hasStructuralDamage == 0) {
+                    prop->hasStructuralDamage = 1;
+                    printf("  [!] %s has suffered structural damage due to lack of maintenance!\n", prop->name);
+                }
+            }
+        }
+    }
 }

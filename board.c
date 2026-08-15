@@ -31,6 +31,10 @@ void init_Board(GameState *game) {
     game->board[1].data.property.insurance = NONE;
     game->board[1].data.property.houses = 0;
     game->board[1].data.property.hotel = 0;
+    game->board[1].data.property.buildingCondition = 100;
+    game->board[1].data.property.roundsUnmaintained = 0;
+    game->board[1].data.property.hasStructuralDamage = 0;
+    game->board[1].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 2: Community Development Fund
@@ -58,6 +62,10 @@ void init_Board(GameState *game) {
     game->board[3].data.property.insurance = NONE;
     game->board[3].data.property.houses = 0;
     game->board[3].data.property.hotel = 0;
+    game->board[3].data.property.buildingCondition = 100;
+    game->board[3].data.property.roundsUnmaintained = 0;
+    game->board[3].data.property.hasStructuralDamage = 0;
+    game->board[3].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 4: Income Tax
@@ -101,6 +109,10 @@ void init_Board(GameState *game) {
     game->board[6].data.property.insurance = NONE;
     game->board[6].data.property.houses = 0;
     game->board[6].data.property.hotel = 0;
+    game->board[6].data.property.buildingCondition = 100;
+    game->board[6].data.property.roundsUnmaintained = 0;
+    game->board[6].data.property.hasStructuralDamage = 0;
+    game->board[6].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 7: National Event Card
@@ -129,6 +141,10 @@ void init_Board(GameState *game) {
     game->board[8].data.property.insurance = NONE;
     game->board[8].data.property.houses = 0;
     game->board[8].data.property.hotel = 0;
+    game->board[8].data.property.buildingCondition = 100;
+    game->board[8].data.property.roundsUnmaintained = 0;
+    game->board[8].data.property.hasStructuralDamage = 0;
+    game->board[8].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 9: Mount Lavinia
@@ -151,6 +167,10 @@ void init_Board(GameState *game) {
     game->board[9].data.property.insurance = NONE;
     game->board[9].data.property.houses = 0;
     game->board[9].data.property.hotel = 0;
+    game->board[9].data.property.buildingCondition = 100;
+    game->board[9].data.property.roundsUnmaintained = 0;
+    game->board[9].data.property.hasStructuralDamage = 0;
+    game->board[9].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 10: Jail / Just Visiting
@@ -180,6 +200,10 @@ void init_Board(GameState *game) {
     game->board[11].data.property.insurance = NONE;
     game->board[11].data.property.houses = 0;
     game->board[11].data.property.hotel = 0;
+    game->board[11].data.property.buildingCondition = 100;
+    game->board[11].data.property.roundsUnmaintained = 0;
+    game->board[11].data.property.hasStructuralDamage = 0;
+    game->board[11].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 12: Ceylon Electricity Board
@@ -214,6 +238,10 @@ void init_Board(GameState *game) {
     game->board[13].data.property.insurance = NONE;
     game->board[13].data.property.houses = 0;
     game->board[13].data.property.hotel = 0;
+    game->board[13].data.property.buildingCondition = 100;
+    game->board[13].data.property.roundsUnmaintained = 0;
+    game->board[13].data.property.hasStructuralDamage = 0;
+    game->board[13].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 14: Kottawa
@@ -234,6 +262,10 @@ void init_Board(GameState *game) {
     game->board[14].data.property.insurance = NONE;
     game->board[14].data.property.houses = 0;
     game->board[14].data.property.hotel = 0;
+    game->board[14].data.property.buildingCondition = 100;
+    game->board[14].data.property.roundsUnmaintained = 0;
+    game->board[14].data.property.hasStructuralDamage = 0;
+    game->board[14].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 15: Kandy Railway Station
@@ -269,6 +301,10 @@ void init_Board(GameState *game) {
     game->board[16].data.property.insurance = NONE;
     game->board[16].data.property.houses = 0;
     game->board[16].data.property.hotel = 0;
+    game->board[16].data.property.buildingCondition = 100;
+    game->board[16].data.property.roundsUnmaintained = 0;
+    game->board[16].data.property.hasStructuralDamage = 0;
+    game->board[16].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 17: Sri Lanka Insurance
@@ -297,6 +333,10 @@ void init_Board(GameState *game) {
     game->board[18].data.property.insurance = NONE;
     game->board[18].data.property.houses = 0;
     game->board[18].data.property.hotel = 0;
+    game->board[18].data.property.buildingCondition = 100;
+    game->board[18].data.property.roundsUnmaintained = 0;
+    game->board[18].data.property.hasStructuralDamage = 0;
+    game->board[18].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 19: Ja-Ela
@@ -317,6 +357,10 @@ void init_Board(GameState *game) {
     game->board[19].data.property.insurance = NONE;
     game->board[19].data.property.houses = 0;
     game->board[19].data.property.hotel = 0;
+    game->board[19].data.property.buildingCondition = 100;
+    game->board[19].data.property.roundsUnmaintained = 0;
+    game->board[19].data.property.hasStructuralDamage = 0;
+    game->board[19].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 20: Free Parking
@@ -345,6 +389,10 @@ void init_Board(GameState *game) {
     game->board[21].data.property.insurance = NONE;
     game->board[21].data.property.houses = 0;
     game->board[21].data.property.hotel = 0;
+    game->board[21].data.property.buildingCondition = 100;
+    game->board[21].data.property.roundsUnmaintained = 0;
+    game->board[21].data.property.hasStructuralDamage = 0;
+    game->board[21].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 22: National Event Card
@@ -373,6 +421,10 @@ void init_Board(GameState *game) {
     game->board[23].data.property.insurance = NONE;
     game->board[23].data.property.houses = 0;
     game->board[23].data.property.hotel = 0;
+    game->board[23].data.property.buildingCondition = 100;
+    game->board[23].data.property.roundsUnmaintained = 0;
+    game->board[23].data.property.hasStructuralDamage = 0;
+    game->board[23].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 24: Katugastota
@@ -393,6 +445,10 @@ void init_Board(GameState *game) {
     game->board[24].data.property.insurance = NONE;
     game->board[24].data.property.houses = 0;
     game->board[24].data.property.hotel = 0;
+    game->board[24].data.property.buildingCondition = 100;
+    game->board[24].data.property.roundsUnmaintained = 0;
+    game->board[24].data.property.hasStructuralDamage = 0;
+    game->board[24].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 25: Galle Railway Station
@@ -429,6 +485,10 @@ void init_Board(GameState *game) {
     game->board[26].data.property.insurance = NONE;
     game->board[26].data.property.houses = 0;
     game->board[26].data.property.hotel = 0;
+    game->board[26].data.property.buildingCondition = 100;
+    game->board[26].data.property.roundsUnmaintained = 0;
+    game->board[26].data.property.hasStructuralDamage = 0;
+    game->board[26].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 27: Unawatuna
@@ -452,6 +512,10 @@ void init_Board(GameState *game) {
     game->board[27].data.property.insurance = NONE;
     game->board[27].data.property.houses = 0;
     game->board[27].data.property.hotel = 0;
+    game->board[27].data.property.buildingCondition = 100;
+    game->board[27].data.property.roundsUnmaintained = 0;
+    game->board[27].data.property.hasStructuralDamage = 0;
+    game->board[27].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 28: National Water Supply and Drainage Board
@@ -488,6 +552,10 @@ void init_Board(GameState *game) {
     game->board[29].data.property.insurance = NONE;
     game->board[29].data.property.houses = 0;
     game->board[29].data.property.hotel = 0;
+    game->board[29].data.property.buildingCondition = 100;
+    game->board[29].data.property.roundsUnmaintained = 0;
+    game->board[29].data.property.hasStructuralDamage = 0;
+    game->board[29].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 30: Go To Jail
@@ -516,6 +584,10 @@ void init_Board(GameState *game) {
     game->board[31].data.property.insurance = NONE;
     game->board[31].data.property.houses = 0;
     game->board[31].data.property.hotel = 0;
+    game->board[31].data.property.buildingCondition = 100;
+    game->board[31].data.property.roundsUnmaintained = 0;
+    game->board[31].data.property.hasStructuralDamage = 0;
+    game->board[31].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 32: Nallur
@@ -537,6 +609,10 @@ void init_Board(GameState *game) {
     game->board[32].data.property.insurance = NONE;
     game->board[32].data.property.houses = 0;
     game->board[32].data.property.hotel = 0;
+    game->board[32].data.property.buildingCondition = 100;
+    game->board[32].data.property.roundsUnmaintained = 0;
+    game->board[32].data.property.hasStructuralDamage = 0;
+    game->board[32].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 33: Ceylinco Insurance
@@ -566,6 +642,10 @@ void init_Board(GameState *game) {
     game->board[34].data.property.insurance = NONE;
     game->board[34].data.property.houses = 0;
     game->board[34].data.property.hotel = 0;
+    game->board[34].data.property.buildingCondition = 100;
+    game->board[34].data.property.roundsUnmaintained = 0;
+    game->board[34].data.property.hasStructuralDamage = 0;
+    game->board[34].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 35: Jaffna Railway Station
@@ -607,6 +687,10 @@ void init_Board(GameState *game) {
     game->board[37].data.property.insurance = NONE;
     game->board[37].data.property.houses = 0;
     game->board[37].data.property.hotel = 0;
+    game->board[37].data.property.buildingCondition = 100;
+    game->board[37].data.property.roundsUnmaintained = 0;
+    game->board[37].data.property.hasStructuralDamage = 0;
+    game->board[37].data.property.propertyAge = 0;
 
     // ---------------------------------------------------------------------
     // Index 38: Bank of Ceylon
@@ -636,4 +720,8 @@ void init_Board(GameState *game) {
     game->board[39].data.property.insurance = NONE;
     game->board[39].data.property.houses = 0;
     game->board[39].data.property.hotel = 0;
+    game->board[39].data.property.buildingCondition = 100;
+    game->board[39].data.property.roundsUnmaintained = 0;
+    game->board[39].data.property.hasStructuralDamage = 0;
+    game->board[39].data.property.propertyAge = 0;
 }

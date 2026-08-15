@@ -139,3 +139,41 @@ void developProperties(GameState *game, int playerIdx) {
         }
     }
 }
+
+// AI performs maintenance at the beginning of their turn (Rules-LK 27, 29)
+void performMaintenance(GameState *game, int playerIdx) {
+    Player *player = &game->players[playerIdx];
+
+    for (int i = 0; i < SQUARE_COUNT; i++) {
+        if (game->board[i].type == SQUARE_PROPERTY) {
+            Property *prop = &game->board[i].data.property;
+            
+            if (prop->owner == playerIdx && (prop->houses > 0 || prop->hotel > 0)) {
+                
+                if (prop->hasStructuralDamage) {
+                    // Rule 29: Renovation costs 25% of replacement value
+                    int replacementValue = (prop->houses * prop->houseCost) + (prop->hotel * prop->hotelCost);
+                    int cost = replacementValue * 25 / 100;
+                    
+                    if (player->cash >= cost) {
+                        player->cash -= cost;
+                        prop->hasStructuralDamage = 0;
+                        prop->buildingCondition = 100;
+                        prop->roundsUnmaintained = 0;
+                        printf("  >>> %s renovated structural damage on %s for LKR %d\n", player->name, prop->name, cost);
+                    }
+                } else if (prop->buildingCondition < 90 || prop->roundsUnmaintained >= 15) {
+                    // Rule 27: Normal Maintenance
+                    int cost = (prop->houses * prop->houseCost * 5 / 100) + (prop->hotel * prop->hotelCost * 8 / 100);
+                    
+                    if (player->cash >= cost && cost > 0) {
+                        player->cash -= cost;
+                        prop->buildingCondition = 100;
+                        prop->roundsUnmaintained = 0;
+                        printf("  >>> %s performed maintenance on %s for LKR %d\n", player->name, prop->name, cost);
+                    }
+                }
+            }
+        }
+    }
+}
