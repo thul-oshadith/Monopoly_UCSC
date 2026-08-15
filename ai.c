@@ -150,7 +150,17 @@ void performMaintenance(GameState *game, int playerIdx) {
             
             if (prop->owner == playerIdx && (prop->houses > 0 || prop->hotel > 0)) {
                 
-                if (prop->hasStructuralDamage) {
+                if (prop->isDisasterDamaged) {
+                    // Disaster repair costs 50% of replacement value
+                    int replacementValue = (prop->houses * prop->houseCost) + (prop->hotel * prop->hotelCost);
+                    int cost = replacementValue / 2;
+                    
+                    if (player->cash >= cost) {
+                        player->cash -= cost;
+                        prop->isDisasterDamaged = 0;
+                        printf("  >>> %s repaired disaster damage on %s for LKR %d\n", player->name, prop->name, cost);
+                    }
+                } else if (prop->hasStructuralDamage) {
                     // Rule 29: Renovation costs 25% of replacement value
                     int replacementValue = (prop->houses * prop->houseCost) + (prop->hotel * prop->hotelCost);
                     int cost = replacementValue * 25 / 100;

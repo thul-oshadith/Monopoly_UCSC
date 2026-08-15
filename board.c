@@ -29,6 +29,8 @@ void init_Board(GameState *game) {
     game->board[1].data.property.owner = -1;
     game->board[1].data.property.mortgaged = 0;
     game->board[1].data.property.insurance = NONE;
+    game->board[1].data.property.insuranceRoundsRemaining = 0;
+    game->board[1].data.property.isDisasterDamaged = 0;
     game->board[1].data.property.houses = 0;
     game->board[1].data.property.hotel = 0;
     game->board[1].data.property.buildingCondition = 100;
@@ -60,6 +62,8 @@ void init_Board(GameState *game) {
     game->board[3].data.property.owner = -1;
     game->board[3].data.property.mortgaged = 0;
     game->board[3].data.property.insurance = NONE;
+    game->board[3].data.property.insuranceRoundsRemaining = 0;
+    game->board[3].data.property.isDisasterDamaged = 0;
     game->board[3].data.property.houses = 0;
     game->board[3].data.property.hotel = 0;
     game->board[3].data.property.buildingCondition = 100;
@@ -107,6 +111,8 @@ void init_Board(GameState *game) {
     game->board[6].data.property.owner = -1;
     game->board[6].data.property.mortgaged = 0;
     game->board[6].data.property.insurance = NONE;
+    game->board[6].data.property.insuranceRoundsRemaining = 0;
+    game->board[6].data.property.isDisasterDamaged = 0;
     game->board[6].data.property.houses = 0;
     game->board[6].data.property.hotel = 0;
     game->board[6].data.property.buildingCondition = 100;
@@ -139,6 +145,8 @@ void init_Board(GameState *game) {
     game->board[8].data.property.owner = -1;
     game->board[8].data.property.mortgaged = 0;
     game->board[8].data.property.insurance = NONE;
+    game->board[8].data.property.insuranceRoundsRemaining = 0;
+    game->board[8].data.property.isDisasterDamaged = 0;
     game->board[8].data.property.houses = 0;
     game->board[8].data.property.hotel = 0;
     game->board[8].data.property.buildingCondition = 100;
@@ -165,6 +173,8 @@ void init_Board(GameState *game) {
     game->board[9].data.property.owner = -1;
     game->board[9].data.property.mortgaged = 0;
     game->board[9].data.property.insurance = NONE;
+    game->board[9].data.property.insuranceRoundsRemaining = 0;
+    game->board[9].data.property.isDisasterDamaged = 0;
     game->board[9].data.property.houses = 0;
     game->board[9].data.property.hotel = 0;
     game->board[9].data.property.buildingCondition = 100;
@@ -198,6 +208,8 @@ void init_Board(GameState *game) {
     game->board[11].data.property.owner = -1;
     game->board[11].data.property.mortgaged = 0;
     game->board[11].data.property.insurance = NONE;
+    game->board[11].data.property.insuranceRoundsRemaining = 0;
+    game->board[11].data.property.isDisasterDamaged = 0;
     game->board[11].data.property.houses = 0;
     game->board[11].data.property.hotel = 0;
     game->board[11].data.property.buildingCondition = 100;
@@ -236,6 +248,8 @@ void init_Board(GameState *game) {
     game->board[13].data.property.owner = -1;
     game->board[13].data.property.mortgaged = 0;
     game->board[13].data.property.insurance = NONE;
+    game->board[13].data.property.insuranceRoundsRemaining = 0;
+    game->board[13].data.property.isDisasterDamaged = 0;
     game->board[13].data.property.houses = 0;
     game->board[13].data.property.hotel = 0;
     game->board[13].data.property.buildingCondition = 100;
@@ -260,6 +274,8 @@ void init_Board(GameState *game) {
     game->board[14].data.property.owner = -1;
     game->board[14].data.property.mortgaged = 0;
     game->board[14].data.property.insurance = NONE;
+    game->board[14].data.property.insuranceRoundsRemaining = 0;
+    game->board[14].data.property.isDisasterDamaged = 0;
     game->board[14].data.property.houses = 0;
     game->board[14].data.property.hotel = 0;
     game->board[14].data.property.buildingCondition = 100;
@@ -299,6 +315,8 @@ void init_Board(GameState *game) {
     game->board[16].data.property.owner = -1;
     game->board[16].data.property.mortgaged = 0;
     game->board[16].data.property.insurance = NONE;
+    game->board[16].data.property.insuranceRoundsRemaining = 0;
+    game->board[16].data.property.isDisasterDamaged = 0;
     game->board[16].data.property.houses = 0;
     game->board[16].data.property.hotel = 0;
     game->board[16].data.property.buildingCondition = 100;
@@ -331,6 +349,8 @@ void init_Board(GameState *game) {
     game->board[18].data.property.owner = -1;
     game->board[18].data.property.mortgaged = 0;
     game->board[18].data.property.insurance = NONE;
+    game->board[18].data.property.insuranceRoundsRemaining = 0;
+    game->board[18].data.property.isDisasterDamaged = 0;
     game->board[18].data.property.houses = 0;
     game->board[18].data.property.hotel = 0;
     game->board[18].data.property.buildingCondition = 100;
@@ -355,6 +375,8 @@ void init_Board(GameState *game) {
     game->board[19].data.property.owner = -1;
     game->board[19].data.property.mortgaged = 0;
     game->board[19].data.property.insurance = NONE;
+    game->board[19].data.property.insuranceRoundsRemaining = 0;
+    game->board[19].data.property.isDisasterDamaged = 0;
     game->board[19].data.property.houses = 0;
     game->board[19].data.property.hotel = 0;
     game->board[19].data.property.buildingCondition = 100;
@@ -387,6 +409,8 @@ void init_Board(GameState *game) {
     game->board[21].data.property.owner = -1;
     game->board[21].data.property.mortgaged = 0;
     game->board[21].data.property.insurance = NONE;
+    game->board[21].data.property.insuranceRoundsRemaining = 0;
+    game->board[21].data.property.isDisasterDamaged = 0;
     game->board[21].data.property.houses = 0;
     game->board[21].data.property.hotel = 0;
     game->board[21].data.property.buildingCondition = 100;
@@ -419,6 +443,8 @@ void init_Board(GameState *game) {
     game->board[23].data.property.owner = -1;
     game->board[23].data.property.mortgaged = 0;
     game->board[23].data.property.insurance = NONE;
+    game->board[23].data.property.insuranceRoundsRemaining = 0;
+    game->board[23].data.property.isDisasterDamaged = 0;
     game->board[23].data.property.houses = 0;
     game->board[23].data.property.hotel = 0;
     game->board[23].data.property.buildingCondition = 100;
@@ -443,6 +469,8 @@ void init_Board(GameState *game) {
     game->board[24].data.property.owner = -1;
     game->board[24].data.property.mortgaged = 0;
     game->board[24].data.property.insurance = NONE;
+    game->board[24].data.property.insuranceRoundsRemaining = 0;
+    game->board[24].data.property.isDisasterDamaged = 0;
     game->board[24].data.property.houses = 0;
     game->board[24].data.property.hotel = 0;
     game->board[24].data.property.buildingCondition = 100;
@@ -483,6 +511,8 @@ void init_Board(GameState *game) {
     game->board[26].data.property.owner = -1;
     game->board[26].data.property.mortgaged = 0;
     game->board[26].data.property.insurance = NONE;
+    game->board[26].data.property.insuranceRoundsRemaining = 0;
+    game->board[26].data.property.isDisasterDamaged = 0;
     game->board[26].data.property.houses = 0;
     game->board[26].data.property.hotel = 0;
     game->board[26].data.property.buildingCondition = 100;
@@ -510,6 +540,8 @@ void init_Board(GameState *game) {
     game->board[27].data.property.owner = -1;
     game->board[27].data.property.mortgaged = 0;
     game->board[27].data.property.insurance = NONE;
+    game->board[27].data.property.insuranceRoundsRemaining = 0;
+    game->board[27].data.property.isDisasterDamaged = 0;
     game->board[27].data.property.houses = 0;
     game->board[27].data.property.hotel = 0;
     game->board[27].data.property.buildingCondition = 100;
@@ -550,6 +582,8 @@ void init_Board(GameState *game) {
     game->board[29].data.property.owner = -1;
     game->board[29].data.property.mortgaged = 0;
     game->board[29].data.property.insurance = NONE;
+    game->board[29].data.property.insuranceRoundsRemaining = 0;
+    game->board[29].data.property.isDisasterDamaged = 0;
     game->board[29].data.property.houses = 0;
     game->board[29].data.property.hotel = 0;
     game->board[29].data.property.buildingCondition = 100;
@@ -582,6 +616,8 @@ void init_Board(GameState *game) {
     game->board[31].data.property.owner = -1;
     game->board[31].data.property.mortgaged = 0;
     game->board[31].data.property.insurance = NONE;
+    game->board[31].data.property.insuranceRoundsRemaining = 0;
+    game->board[31].data.property.isDisasterDamaged = 0;
     game->board[31].data.property.houses = 0;
     game->board[31].data.property.hotel = 0;
     game->board[31].data.property.buildingCondition = 100;
@@ -607,6 +643,8 @@ void init_Board(GameState *game) {
     game->board[32].data.property.owner = -1;
     game->board[32].data.property.mortgaged = 0;
     game->board[32].data.property.insurance = NONE;
+    game->board[32].data.property.insuranceRoundsRemaining = 0;
+    game->board[32].data.property.isDisasterDamaged = 0;
     game->board[32].data.property.houses = 0;
     game->board[32].data.property.hotel = 0;
     game->board[32].data.property.buildingCondition = 100;
@@ -640,6 +678,8 @@ void init_Board(GameState *game) {
     game->board[34].data.property.owner = -1;
     game->board[34].data.property.mortgaged = 0;
     game->board[34].data.property.insurance = NONE;
+    game->board[34].data.property.insuranceRoundsRemaining = 0;
+    game->board[34].data.property.isDisasterDamaged = 0;
     game->board[34].data.property.houses = 0;
     game->board[34].data.property.hotel = 0;
     game->board[34].data.property.buildingCondition = 100;
@@ -685,6 +725,8 @@ void init_Board(GameState *game) {
     game->board[37].data.property.owner = -1;
     game->board[37].data.property.mortgaged = 0;
     game->board[37].data.property.insurance = NONE;
+    game->board[37].data.property.insuranceRoundsRemaining = 0;
+    game->board[37].data.property.isDisasterDamaged = 0;
     game->board[37].data.property.houses = 0;
     game->board[37].data.property.hotel = 0;
     game->board[37].data.property.buildingCondition = 100;
@@ -718,6 +760,8 @@ void init_Board(GameState *game) {
     game->board[39].data.property.owner = -1;
     game->board[39].data.property.mortgaged = 0;
     game->board[39].data.property.insurance = NONE;
+    game->board[39].data.property.insuranceRoundsRemaining = 0;
+    game->board[39].data.property.isDisasterDamaged = 0;
     game->board[39].data.property.houses = 0;
     game->board[39].data.property.hotel = 0;
     game->board[39].data.property.buildingCondition = 100;

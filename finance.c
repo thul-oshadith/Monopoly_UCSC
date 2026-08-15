@@ -189,6 +189,8 @@ void payAmount(GameState *game, int payerIdx, int payeeIdx, int amount) {
             if (game->board[i].type == SQUARE_PROPERTY && game->board[i].data.property.owner == payerIdx) {
                 game->board[i].data.property.owner = -1;
                 game->board[i].data.property.mortgaged = 0; // Reset mortgage status
+                game->board[i].data.property.insurance = NONE;
+                game->board[i].data.property.insuranceRoundsRemaining = 0;
                 printf("  >> %s is returned to the Bank! (Auctioning...)\n", game->board[i].name);
                 startAuction(game, i);
             } 
@@ -357,6 +359,7 @@ void processEndRoundLoans(GameState *game) {
                             sq->data.property.houses = 0; // Demolished
                             sq->data.property.hotel = 0;
                             sq->data.property.insurance = NONE;
+                            sq->data.property.insuranceRoundsRemaining = 0;
                         } else {
                             hasRemainingAssets = 1;
                         }
@@ -390,6 +393,54 @@ void processEndRoundLoans(GameState *game) {
                     printf("  >> %s continues the game using remaining assets.\n", p->name);
                 }
                 printf("======================================================\n\n");
+            }
+        }
+    }
+}
+
+void handleInsuranceSquare(GameState *game, int playerIdx) {
+    Player *player = &game->players[playerIdx];
+    char *pname = player->name;
+    
+    printf("  >> %s is reviewing insurance policies.\n", pname);
+    
+    for (int i = 0; i < SQUARE_COUNT; i++) {
+        if (game->board[i].type == SQUARE_PROPERTY) {
+            Property *prop = &game->board[i].data.property;
+            if (prop->owner == playerIdx && (prop->houses > 0 || prop->hotel > 0) && prop->insurance == NONE) {
+                int value = (prop->houses * prop->houseCost) + (prop->hotel * prop->hotelCost) + prop->purchasePrice;
+                
+                InsuranceType choice = NONE;
+                int premium = 0;
+                
+                // AI Personality Logic
+                if (strcmp(pname, "Aggressive Investor") == 0) {
+                    if (prop->hotel > 0) choice = COMPREHENSIVE;
+                    else choice = BASIC;
+                } else if (strcmp(pname, "Conservative Banker") == 0) {
+                    choice = COMPREHENSIVE;
+                } else if (strcmp(pname, "Risk Taker") == 0) {
+                    if (player->hasSufferedLoss) choice = BASIC;
+                } else if (strcmp(pname, "Opportunistic Trader") == 0) {
+                    if (prop->hotel > 0 && prop->isCommercial) choice = COMPREHENSIVE;
+                }
+                
+                if (choice != NONE) {
+                    if (choice == BASIC) premium = value * 5 / 100;
+                    if (choice == COMPREHENSIVE) premium = value * 10 / 100;
+                    if (choice == BUSINESS_INTERRUPTION) premium = value * 15 / 100;
+                    
+                    if (game->currentEvent == EVENT_HEAVY_MONSOON) {
+                        premium = premium * 150 / 100; // 50% increase
+                    }
+                    
+                    if (player->cash >= premium) {
+                        player->cash -= premium;
+                        prop->insurance = choice;
+                        prop->insuranceRoundsRemaining = 20;
+                        printf("  [+] %s bought %s insurance for %s (LKR %d)\n", pname, choice == BASIC ? "BASIC" : "COMPREHENSIVE", prop->name, premium);
+                    }
+                }
             }
         }
     }

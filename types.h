@@ -68,7 +68,7 @@ typedef struct Player{
     int bankrupt;
     int turnOrder;
     Loan activeLoan; // Added active loan
-
+    int hasSufferedLoss; // Set to 1 if player suffers an uninsured loss
 }Player;
 
 typedef struct Property{
@@ -92,6 +92,7 @@ typedef struct Property{
     int isCommercial;
 
     InsuranceType insurance;
+    int insuranceRoundsRemaining;
 
     int houses;
     int hotel;
@@ -99,6 +100,7 @@ typedef struct Property{
     int buildingCondition;
     int roundsUnmaintained;
     int hasStructuralDamage;
+    int isDisasterDamaged;
     int propertyAge;
 }Property;
 

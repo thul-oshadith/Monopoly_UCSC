@@ -1,5 +1,6 @@
 #include "types.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 // Depreciation Constants (Rule-LK 15-16, 28)
 #define DEPRECIATION_GRACE_ROUNDS 50
@@ -127,4 +128,74 @@ void processDepreciation(GameState *game) {
             }
         }
     }
+}
+
+// Processes end-of-round insurance decrements
+void processEndRoundInsurance(GameState *game) {
+    for (int i = 0; i < SQUARE_COUNT; i++) {
+        if (game->board[i].type == SQUARE_PROPERTY) {
+            Property *prop = &game->board[i].data.property;
+            if (prop->insurance != NONE && prop->insuranceRoundsRemaining > 0) {
+                prop->insuranceRoundsRemaining--;
+                if (prop->insuranceRoundsRemaining == 3) {
+                    printf("  [!] RENEWAL REMINDER: %s's insurance on %s expires in 3 rounds!\n", game->players[prop->owner].name, prop->name);
+                } else if (prop->insuranceRoundsRemaining == 0) {
+                    prop->insurance = NONE;
+                    printf("  [!] INSURANCE EXPIRED: %s's policy on %s has expired.\n", game->players[prop->owner].name, prop->name);
+                }
+            }
+        }
+    }
+}
+
+// Triggers random disasters every 10 rounds
+void triggerRandomDisaster(GameState *game) {
+    // Find all developed properties
+    int developed[40];
+    int count = 0;
+    for (int i = 0; i < SQUARE_COUNT; i++) {
+        if (game->board[i].type == SQUARE_PROPERTY) {
+            Property *prop = &game->board[i].data.property;
+            if (prop->houses > 0 || prop->hotel > 0) {
+                developed[count++] = i;
+            }
+        }
+    }
+    if (count == 0) return; // No developed properties to hit
+    
+    // Pick a random developed property and a random disaster
+    int targetIdx = developed[rand() % count];
+    Square *sq = &game->board[targetIdx];
+    Property *prop = &sq->data.property;
+    Player *owner = &game->players[prop->owner];
+    
+    char *disasters[] = {"Fire", "Flood", "Riot", "Building Collapse", "Electrical Failure"};
+    int dIdx = rand() % 5;
+    char *disasterName = disasters[dIdx];
+    
+    printf("\n======================================================\n");
+    printf("  >>> DISASTER STRIKES: %s hit %s! <<<\n", disasterName, prop->name);
+    
+    int repairCost = ((prop->houses * prop->houseCost) + (prop->hotel * prop->hotelCost)) / 2;
+    int payout = 0;
+    
+    // Check coverage
+    if (prop->insurance == BUSINESS_INTERRUPTION) {
+        payout = repairCost + (prop->rent * 5 * 10); // hotel multiplier is 10
+    } else if (prop->insurance == COMPREHENSIVE) {
+        if (dIdx < 3) payout = repairCost; // Covers Fire, Flood, Riot
+    } else if (prop->insurance == BASIC) {
+        if (dIdx < 2) payout = (repairCost * 80) / 100; // Covers Fire, Flood
+    }
+    
+    prop->isDisasterDamaged = 1;
+    
+    if (payout > 0) {
+        owner->cash += payout;
+        printf("  [!] Insurance payout of LKR %d credited to %s!\n", payout, owner->name);
+    } else {
+        owner->hasSufferedLoss = 1;
+        printf("  [!] NO COVERAGE! %s bears the full repair cost of LKR %d and rent drops to 0 until repaired.\n", owner->name, repairCost);
+    }
+    printf("======================================================\n");
 }

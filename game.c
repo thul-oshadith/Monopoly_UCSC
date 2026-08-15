@@ -118,6 +118,7 @@ void handleBankSquare(GameState *game, int playerIdx);
 void payAmount(GameState *game, int payerIdx, int payeeIdx, int amount);
 int applyEventRentModifier(GameState *game, int sqIdx, int rent, int isHotel);
 
+void handleInsuranceSquare(GameState *game, int playerIdx);
 
 void handleLanding(GameState *game, int playerIdx, int diceTotal) {
     int pos = game->players[playerIdx].position;
@@ -171,6 +172,11 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             if (prop->hasStructuralDamage) {
                 int remainingPercent = 100 - (STRUCTURAL_DAMAGE_PENALTY + 10); // -25% for rent
                 effectiveRent = effectiveRent * remainingPercent / 100;
+            }
+
+            // 4. Apply Disaster Damage (Rule-LK 11)
+            if (prop->isDisasterDamaged) {
+                effectiveRent = 0; // Rent is 0 until repaired
             }
 
             if (effectiveRent > 0) {
@@ -329,7 +335,7 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             break;
 
         case SQUARE_INSURANCE:
-            // TODO
+            handleInsuranceSquare(game, playerIdx);
             break;
 
         case SQUARE_JAIL:

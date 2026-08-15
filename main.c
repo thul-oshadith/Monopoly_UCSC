@@ -12,6 +12,8 @@ void performMaintenance(GameState *game, int playerIdx);
 void attemptPurchase(GameState *game, int playerIdx, Square *sq, int purchasePrice, PropertyGroup group);
 void processEndRoundLoans(GameState *game);
 void processDepreciation(GameState *game);
+void processEndRoundInsurance(GameState *game);
+void triggerRandomDisaster(GameState *game);
 
 int main(){
     srand(time(NULL)); // seed random numbers for dice
@@ -142,6 +144,12 @@ int main(){
         // Process loans and depreciation at the end of the round
         processEndRoundLoans(&game);
         processDepreciation(&game);
+        processEndRoundInsurance(&game);
+        
+        if (game.currentRound > 0 && game.currentRound % 10 == 0) {
+            triggerRandomDisaster(&game);
+        }
+
         game.currentRound++;
 
         // Process Economic Events (Rule-LK 18)
