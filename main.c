@@ -17,9 +17,17 @@ int main(){
     game.currentEvent = EVENT_NONE;
     game.currentRound = 0;
     
-    //Setting up the game
+    // Initialize board
     init_Board(&game);
     init_Players(&game);
+
+    // Print starting banner
+    printf("\nMONOPOLY-LK Simulation\n\n");
+    for(int i = 0; i < PLAYER_COUNT; i++) {
+        printf("Player %d : %s\n", i+1, game.players[i].name);
+    }
+
+    printf("\nEach player begins with LKR 30,000.\n\n");
 
     //Determine the play order
     decideTurnOrder(&game);
@@ -91,8 +99,8 @@ int main(){
                 printf("%s passed Go! Collected LKR 2000\n", game.players[p].name);
             }
             
-            printf(" %s rolled total dice score of %d, moved to %s (square %d)\n", game.players[p].name,
-            diceTotal, game.board[newPosition].name,  newPosition);
+            printf("%s rolled %d.\n", game.players[p].name, diceTotal);
+            printf("%s moves from Square %d to Square %d.\n", game.players[p].name, oldPosition, newPosition);
 
             handleLanding(&game , p, diceTotal);
             developProperties(&game, p);
