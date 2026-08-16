@@ -43,8 +43,8 @@ void attemptPurchase(GameState *game, int playerIdx, Square *sq, int purchasePri
     }
 
     // --- AGGRESSIVE INVESTOR ---
-    // Rule: "Always purchases if sufficient funds remain to pay at least one future rent"
-    // We use 100 (the cheapest rent on the board) as the minimum rent threshold
+    // purchases if sufficient funds remain to pay at least one future rent
+    // use 100 (the cheapest rent on the board) as the minimum rent threshold
     if (strcmp(player->name, "Aggressive Investor") == 0) {
         if (player->cash - purchasePrice >= 100) {
             buyDecision = 1;
@@ -52,8 +52,8 @@ void attemptPurchase(GameState *game, int playerIdx, Square *sq, int purchasePri
     }
 
     // --- CONSERVATIVE BANKER ---
-    // Rule: "Purchases properties only if at least 50% of current cash remains after purchase"
-    // So: purchasePrice must be <= half of their current cash
+    //Purchases properties only if at least 50% of current cash remains after purchase"
+    //purchasePrice must be <= half of their current cash
     else if (strcmp(player->name, "Conservative Banker") == 0) {
         if (purchasePrice <= player->cash / 2) {
             buyDecision = 1;
@@ -61,8 +61,8 @@ void attemptPurchase(GameState *game, int playerIdx, Square *sq, int purchasePri
     }
 
     // --- RISK TAKER ---
-    // Rule: "Purchases every available property whenever legally possible"
-    // Simply: buy if they have the cash
+    // Purchases every available property whenever legally possible
+    // Simply buy if they have the cash
     else if (strcmp(player->name, "Risk Taker") == 0) {
         if (player->cash >= purchasePrice) {
             buyDecision = 1;
@@ -70,29 +70,58 @@ void attemptPurchase(GameState *game, int playerIdx, Square *sq, int purchasePri
     }
 
     // --- OPPORTUNISTIC TRADER ---
-    // Rule: "Purchases only when projected appreciation exceeds construction costs"
-    // Placeholder: Buy if it completes a color set, OR if 30% of cash remains after purchase
-    // (We will refine this once the economic event system is built)
+    // Purchases only when projected appreciation exceeds construction costs
+    //Buy if it completes a color set, OR if 30% of cash remains after purchase
+    
     else if (strcmp(player->name, "Opportunistic Trader") == 0) {
         int completesSet = 0;
+        int sqIdx = sq->index;
+
         if (sq->type == SQUARE_PROPERTY) {
             completesSet = checkIfCompletesSet(game, playerIdx, group);
         }
+        //Projected appreciation exceeds construction cost
+        int highAppreciation = 0;
+        if (sq->type == SQUARE_PROPERTY) {
+            int basePrice = sq->data.property.purchasePrice;
+            int dynamicPrice = applyEventValueModifier(game, sqIdx, getDynamicPurchasePrice(game, sqIdx));
+            int projectedAppreciation = dynamicPrice - basePrice;
+            
+            int cost = sq->data.property.houseCost;
+            cost = applyEventHouseCostModifier(game, cost);
+            cost = applyDynamicMarketHouseCost(game, group, cost);
+            
+            if (projectedAppreciation > cost) {
+                highAppreciation = 1;
+            }
+        }
+
+        // Balanced portfolio
+        int ownsProperties = 0, ownsRailways = 0, ownsUtilities = 0;
+        for (int i = 0; i < SQUARE_COUNT; i++) {
+            if (game->board[i].type == SQUARE_PROPERTY && game->board[i].data.property.owner == playerIdx) ownsProperties++;
+            if (game->board[i].type == SQUARE_RAILWAY && game->board[i].data.railway.owner == playerIdx) ownsRailways++;
+            if (game->board[i].type == SQUARE_UTILITY && game->board[i].data.utility.owner == playerIdx) ownsUtilities++;
+        }
+        
+        int needsBalance = 0;
+        if (sq->type == SQUARE_RAILWAY && ownsRailways < (ownsProperties / 4 + 1)) needsBalance = 1;
+        if (sq->type == SQUARE_UTILITY && ownsUtilities < (ownsProperties / 8 + 1)) needsBalance = 1;
         
         if (completesSet) {
-            if (player->cash >= purchasePrice) {
-                buyDecision = 1;
-            }
-        } else if (player->cash - purchasePrice > player->cash * 3 / 10) {
+            if (player->cash >= purchasePrice) buyDecision = 1;
+        } 
+        else if (game->currentRegulation == REG_RAILWAY_MODERNIZATION && sq->type == SQUARE_RAILWAY) {
+            if (player->cash >= purchasePrice) buyDecision = 1;
+        }
+        else if (game->currentRegulation == REG_ELECTRICITY_TARIFF_REVISION && sq->type == SQUARE_UTILITY) {
+            if (player->cash >= purchasePrice) buyDecision = 1;
+        }
+        else if (highAppreciation || needsBalance) {
+            if (player->cash >= purchasePrice) buyDecision = 1;
+        }
+        else if (player->cash - purchasePrice > player->cash * 3 / 10) {
             buyDecision = 1;
-        }
-        
-        // Buy aggressively if government regulations boost rents
-        if (game->currentRegulation == REG_RAILWAY_MODERNIZATION && sq->type == SQUARE_RAILWAY) {
-            if (player->cash >= purchasePrice) buyDecision = 1;
-        }
-        if (game->currentRegulation == REG_ELECTRICITY_TARIFF_REVISION && sq->type == SQUARE_UTILITY) {
-            if (player->cash >= purchasePrice) buyDecision = 1;
         }
     }
 
@@ -127,7 +156,7 @@ void startAuction(GameState *game, int sqIdx) {
     
     if (marketValue == 0) return; // Should not happen
     
-    printf("\n  🔨 AUCTION STARTED for %s (Market Value: LKR %d)\n", sq->name, marketValue);
+    printf("\n   AUCTION STARTED for %s (Market Value: LKR %d)\n", sq->name, marketValue);
     
     int activeBidders[PLAYER_COUNT];
     int activeCount = 0;
