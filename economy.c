@@ -238,20 +238,9 @@ void triggerRandomDisaster(GameState *game) {
 // DYNAMIC PROPERTY MARKET 
 // -------------------------------------------------------------
 
-// Helper to get group name as string
-const char* getGroupName(PropertyGroup group) {
-    switch(group) {
-        case BROWN: return "Brown";
-        case LIGHT_BLUE: return "Light Blue";
-        case PINK: return "Pink";
-        case ORANGE: return "Orange";
-        case RED: return "Red";
-        case YELLOW: return "Yellow";
-        case GREEN: return "Green";
-        case DARK_BLUE: return "Dark Blue";
-        default: return "None";
-    }
-}
+// Forward declaration (defined in helper.c)
+const char* getGroupName(PropertyGroup group);
+
 
 void processDynamicPropertyMarket(GameState *game) {
     // Tick down cooldowns

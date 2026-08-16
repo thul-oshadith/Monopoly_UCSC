@@ -302,6 +302,43 @@ int attemptToRaiseFunds(GameState *game, int playerIdx, int amountNeeded) {
     return (payer->cash >= amountNeeded) ? 1 : 0;
 }
 
+//unmortgage its properties if player has cash
+void attemptToUnmortgage(GameState *game, int playerIdx) {
+    Player *p = &game->players[playerIdx];
+    
+    for (int i = 0; i < SQUARE_COUNT; i++) {
+        Square *sq = &game->board[i];
+        
+        if (sq->type == SQUARE_PROPERTY && sq->data.property.owner == playerIdx && sq->data.property.mortgaged) {
+            int unmortgageCost = getDynamicMortgageValue(game, i) * 110 / 100; // 10% interest
+            
+            // keeps a standard buffer of 1000 cash
+            int cashBuffer = 1000;
+            
+            if (p->cash - unmortgageCost >= cashBuffer) {
+                p->cash -= unmortgageCost;
+                sq->data.property.mortgaged = 0;
+                printf("  >> %s paid LKR %d to UNMORTGAGE %s!\n", p->name, unmortgageCost, sq->name);
+            }
+        }
+        else if (sq->type == SQUARE_RAILWAY && sq->data.railway.owner == playerIdx && sq->data.railway.mortgaged) {
+            int unmortgageCost = getDynamicMortgageValue(game, i) * 110 / 100;
+            if (p->cash - unmortgageCost >= 1000) {
+                p->cash -= unmortgageCost;
+                sq->data.railway.mortgaged = 0;
+                printf("  >> %s paid LKR %d to UNMORTGAGE %s!\n", p->name, unmortgageCost, sq->name);
+            }
+        }
+        else if (sq->type == SQUARE_UTILITY && sq->data.utility.owner == playerIdx && sq->data.utility.mortgaged) {
+            int unmortgageCost = getDynamicMortgageValue(game, i) * 110 / 100;
+            if (p->cash - unmortgageCost >= 1000) {
+                p->cash -= unmortgageCost;
+                sq->data.utility.mortgaged = 0;
+                printf("  >> %s paid LKR %d to UNMORTGAGE %s!\n", p->name, unmortgageCost, sq->name);
+            }
+        }
+    }
+}
 
 // -------------------------------------------------------------
 // HANDLE PAYMENTS
