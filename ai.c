@@ -2,13 +2,13 @@
 #include <string.h>
 #include "types.h"
 
-// Forward declaration
+
 int hasMonopoly(GameState *game, int playerIdx, PropertyGroup group);
 int applyEventHouseCostModifier(GameState *game, int cost);
 int applyDynamicMarketHouseCost(GameState *game, PropertyGroup group, int cost);
 int getDynamicMortgageValue(GameState *game, int sqIdx);
 
-// AI tries to unmortgage its properties if it has cash
+//unmortgage its properties if player has cash
 void attemptToUnmortgage(GameState *game, int playerIdx) {
     Player *p = &game->players[playerIdx];
     
@@ -18,7 +18,7 @@ void attemptToUnmortgage(GameState *game, int playerIdx) {
         if (sq->type == SQUARE_PROPERTY && sq->data.property.owner == playerIdx && sq->data.property.mortgaged) {
             int unmortgageCost = getDynamicMortgageValue(game, i) * 110 / 100; // 10% interest
             
-            // AI keeps a standard buffer of 1000 cash
+            // keeps a standard buffer of 1000 cash
             int cashBuffer = 1000;
             
             if (p->cash - unmortgageCost >= cashBuffer) {
@@ -67,33 +67,38 @@ int getPropertyToUpgrade(GameState *game, int playerIdx, PropertyGroup group) {
         }
     }
     
-    if (minBuildings >= 5) return -1; // Everything has a hotel!
+    if (minBuildings >= 5) return -1; // Everything has a hotel
     return bestSquare;
 }
 
 // Builds one house on a property. Returns the cost charged, or 0 if it cannot build.
-int buildHouse(GameState *game, int sqIdx) {
+int buildHouse(GameState *game, int sqIdx, int actualCost) {
     Property *prop = &game->board[sqIdx].data.property;
+    Player *player = &game->players[prop->owner];
     
     if (prop->houses >= 4) return 0;  // Already at max houses, need a hotel next
     if (prop->hotel == 1) return 0;   // Already has a hotel
     
     prop->houses++;
-    printf("  🏠 %s now has %d house(s) (cost LKR %d)\n", game->board[sqIdx].name, prop->houses, prop->houseCost);
-    return prop->houseCost;
+
+    printf("%s constructed one house on %s.\n", player->name, game->board[sqIdx].name);
+    printf("Construction Cost : LKR %d.\n\n", actualCost);
+    return actualCost;
 }
 
 // Upgrades a property from 4 houses to 1 hotel. Returns the cost charged, or 0 if it cannot build.
-int buildHotel(GameState *game, int sqIdx) {
+int buildHotel(GameState *game, int sqIdx, int actualCost) {
     Property *prop = &game->board[sqIdx].data.property;
+    Player *player = &game->players[prop->owner];
     
     if (prop->houses != 4) return 0;  // Must have exactly 4 houses first
     if (prop->hotel == 1) return 0;   // Already has a hotel
     
     prop->houses = 0;  // Remove the 4 houses
     prop->hotel = 1;   // Replace with 1 hotel
-    printf("  🏗️  %s upgraded to a HOTEL! (cost LKR %d)\n", game->board[sqIdx].name, prop->hotelCost);
-    return prop->hotelCost;
+
+    printf("%s upgraded %s to a Hotel.\n", player->name, game->board[sqIdx].name);
+    return actualCost;
 }
 
 // Called at the end of a player's turn to build houses/hotels
@@ -101,7 +106,7 @@ void developProperties(GameState *game, int playerIdx) {
     Player *player = &game->players[playerIdx];
     if (player->bankrupt) return;
 
-    // We check all 8 color groups
+    // check all 8 color groups
     PropertyGroup groups[] = {BROWN, LIGHT_BLUE, PINK, ORANGE, RED, YELLOW, GREEN, DARK_BLUE};
     
     for (int g = 0; g < 8; g++) {
@@ -110,7 +115,7 @@ void developProperties(GameState *game, int playerIdx) {
             // Loop until they stop building
             while (1) {
                 int sqIdx = getPropertyToUpgrade(game, playerIdx, groups[g]);
-                if (sqIdx == -1) break; // Fully upgraded this group!
+                if (sqIdx == -1) break; // Fully upgraded this group
                 
                 Property *prop = &game->board[sqIdx].data.property;
                 
@@ -128,7 +133,7 @@ void developProperties(GameState *game, int playerIdx) {
                     cost = (int)(cost * 0.70f); // 30% discount
                 }
                 
-                // --- AI DECISION: Should we build? ---
+                // Should we build? 
                 int buildDecision = 0;
 
                 // --- AGGRESSIVE INVESTOR ---
@@ -157,7 +162,7 @@ void developProperties(GameState *game, int playerIdx) {
                 }
                 
                 // --- OPPORTUNISTIC TRADER ---
-                // Balanced approach, delays construction during inflation
+                // delays construction during inflation
                 else if (strcmp(player->name, "Opportunistic Trader") == 0) {
                     if (game->currentRegulation == REG_HOUSING_SUBSIDY) {
                         if (player->cash >= cost) buildDecision = 1;
@@ -174,9 +179,9 @@ void developProperties(GameState *game, int playerIdx) {
                     int charged = 0;
                     
                     if (prop->houses == 4) {
-                        charged = buildHotel(game, sqIdx);  // Upgrade to hotel
+                        charged = buildHotel(game, sqIdx, cost);  // Upgrade to hotel
                     } else {
-                        charged = buildHouse(game, sqIdx);  // Build a house
+                        charged = buildHouse(game, sqIdx, cost);  // Build a house
                     }
                     
                     if (charged > 0) {

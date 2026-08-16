@@ -174,7 +174,7 @@ void startAuction(GameState *game, int sqIdx) {
     int currentBid = marketValue / 2; // Starts at 50%
     int highestBidder = -1;
     
-    // We will keep looping until 1 or fewer bidders remain
+    // loop until 1 or fewer bidders remain
     int currentPlayer = 0; // Index of the player currently being asked
     
     while (activeCount > 1 || (activeCount == 1 && highestBidder == -1)) {
@@ -239,7 +239,7 @@ void startAuction(GameState *game, int sqIdx) {
 int attemptToRaiseFunds(GameState *game, int playerIdx, int amountNeeded) {
     Player *payer = &game->players[playerIdx];
     
-    // 1. Sell Hotels (at 50% cost)
+    // Sell Hotels (at 50% cost)
     for (int i = 0; i < SQUARE_COUNT; i++) {
         if (payer->cash >= amountNeeded) return 1;
         
@@ -252,7 +252,7 @@ int attemptToRaiseFunds(GameState *game, int playerIdx, int amountNeeded) {
         }
     }
 
-    // 2. Sell Houses (at 50% cost)
+    // Sell Houses (at 50% cost)
     for (int i = 0; i < SQUARE_COUNT; i++) {
         if (payer->cash >= amountNeeded) return 1;
         
@@ -267,7 +267,7 @@ int attemptToRaiseFunds(GameState *game, int playerIdx, int amountNeeded) {
         }
     }
     
-    // 3. Mortgage Properties (if no buildings and not loanLocked)
+    // Mortgage Properties (if no buildings and not loanLocked)
     for (int i = 0; i < SQUARE_COUNT; i++) {
         if (payer->cash >= amountNeeded) return 1;
         
@@ -365,7 +365,7 @@ void payAmount(GameState *game, int payerIdx, int payeeIdx, int amount) {
 // HANDLE LOANS
 // -------------------------------------------------------------
 
-// Calculate max loan available for player based on eligible un-locked, un-mortgaged collateral
+// Calculate max loan available for player based on eligible unlocked, unmortgaged collateral
 int calculateMaxLoan(GameState *game, int playerIdx) {
     int totalMortgageValue = 0;
     for (int i = 0; i < SQUARE_COUNT; i++) {
@@ -549,12 +549,12 @@ void processEndRoundLoans(GameState *game) {
         if (p->bankrupt) continue;
 
         if (p->activeLoan.active) {
-            // Add interest (Rule-LK 4)
+            // Add interest
             int interest = (int)(p->activeLoan.amount * p->activeLoan.interestRate);
             p->activeLoan.amount += interest;
             p->activeLoan.remainingRounds--;
 
-            // Default check (Rule-LK 6)
+            // Default check
             if (p->activeLoan.remainingRounds <= 0) {
                 printf("\n======================================================\n");
                 printf("  >> LOAN DEFAULT: %s failed to repay their loan within the duration!\n", p->name);
@@ -596,7 +596,7 @@ void processEndRoundLoans(GameState *game) {
                 p->activeLoan.amount = 0;
                 printf("  >> All Loan Locked properties foreclosed to the Bank. Outstanding debt cleared.\n");
 
-                // Check for bankruptcy (Rule-LK 7)
+                // Check for bankruptcy
                 if (p->cash <= 0 && !hasRemainingAssets) {
                     p->bankrupt = 1;
                     printf("  >> %s has no remaining assets and is declared BANKRUPT!\n", p->name);
@@ -628,7 +628,7 @@ void handleInsuranceSquare(GameState *game, int playerIdx) {
                 InsuranceType choice = NONE;
                 int premium = 0;
                 
-                // AI Personality Logic
+                // Personality Logic
                 if (strcmp(pname, "Aggressive Investor") == 0) {
                     if (prop->hotel > 0) choice = COMPREHENSIVE;
                     else choice = BASIC;
@@ -666,7 +666,7 @@ void handleInsuranceSquare(GameState *game, int playerIdx) {
 }
 
 
-// Processes end-of-round insurance decrements
+// Processes end of Round insurance decrements
 void processEndRoundInsurance(GameState *game) {
     for (int i = 0; i < SQUARE_COUNT; i++) {
         if (game->board[i].type == SQUARE_PROPERTY) {

@@ -8,9 +8,9 @@
 // DECIDE TURN ORDER
 // -------------------------------------------------------------
 
-// Recursive function to handle rolling and ties
+
 void rankPlayers(GameState *game, int candidates[], int count, int *resultPos, int isReroll) {
-    // Base cases to stop recursion
+
     if (count == 1) {
         game->turnOrder[*resultPos] = candidates[0]; // lock in this player
         (*resultPos)++;                              // move to next chair
@@ -93,7 +93,7 @@ void decideTurnOrder(GameState *game) {
     }
 
     int resultPos = 0;
-    // Kick off the recursive ranking
+    
     rankPlayers(game, allPlayers, PLAYER_COUNT, &resultPos, 0);
 
     // Save their turn order inside the Player struct for easy access later
@@ -132,7 +132,7 @@ void handleInsuranceSquare(GameState *game, int playerIdx);
 
 void handleLanding(GameState *game, int playerIdx, int diceTotal) {
     int pos = game->players[playerIdx].position;
-    Square *sq = &game->board[pos];  // pointer to the square they landed on
+    Square *sq = &game->board[pos]; 
 
     printf("  >> %s landed on %s\n", game->players[playerIdx].name, sq->name);
 
@@ -142,14 +142,14 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
 
         Property *prop = &sq->data.property;
         if (prop->owner == -1) {
-         // New AI buying logic
+
          int price = getDynamicPurchasePrice(game, pos);
          price = applyEventValueModifier(game, pos, price);
          attemptPurchase(game, playerIdx, sq, price, prop->group);
             
         } 
         else if (prop->owner != playerIdx) {
-        // Owned by someone else — pay rent
+         // pay rent
             int multiplier = 1;
             if (prop->hotel == 1) multiplier = 10;
             else if (prop->houses == 1) multiplier = 2;
@@ -160,7 +160,7 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             effectiveRent = applyEventRentModifier(game, sq->index, effectiveRent, prop->hotel);
             effectiveRent = applyDynamicMarketRent(game, sq->index, effectiveRent);
 
-            // 1. Apply Property Depreciation (Rules 15-16)
+            // 1. Apply Property Depreciation
             if (prop->propertyAge > DEPRECIATION_GRACE_ROUNDS) {
                 int depPercent = (prop->propertyAge - DEPRECIATION_GRACE_ROUNDS) / DEPRECIATION_INTERVAL;
                 if (depPercent > MAX_DEPRECIATION_PERCENT) depPercent = MAX_DEPRECIATION_PERCENT; // Max 30%
@@ -168,7 +168,7 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
                 effectiveRent = effectiveRent * remainingPercent / 100;
             }
 
-            // 2. Apply Building Condition (Rule 26)
+            // 2. Apply Building Condition
             if (prop->houses > 0 || prop->hotel > 0) {
                 if (prop->buildingCondition >= 75 && prop->buildingCondition <= 89) {
                     effectiveRent = effectiveRent * 90 / 100;
@@ -181,13 +181,13 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
                 }
             }
 
-            // 3. Apply Structural Damage Penalty (Rule 28)
+            // 3. Apply Structural Damage Penalty
             if (prop->hasStructuralDamage) {
                 int remainingPercent = 100 - (STRUCTURAL_DAMAGE_PENALTY + 10); // -25% for rent
                 effectiveRent = effectiveRent * remainingPercent / 100;
             }
 
-            // 4. Apply Disaster Damage (Rule-LK 11)
+            // 4. Apply Disaster Damage
             if (prop->isDisasterDamaged) {
                 effectiveRent = 0; // Rent is 0 until repaired
             }
@@ -201,7 +201,7 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             }
         }
         else {
-            // Player owns it — check if they want to renovate the land (Rule-LK 17)
+            // Player owns it — check if they want to renovate the land
             printf("  >> %s owns this property.\n\n", game->players[playerIdx].name);
             if (prop->propertyAge > DEPRECIATION_GRACE_ROUNDS) {
                 int depPercent = (prop->propertyAge - DEPRECIATION_GRACE_ROUNDS) / DEPRECIATION_INTERVAL;
@@ -236,7 +236,7 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             int owner = sq->data.railway.owner;
             if (owner == -1)
             {
-                // New AI buying logic
+            
                 int price = getDynamicPurchasePrice(game, pos);
                 price = applyEventValueModifier(game, pos, price);
                 attemptPurchase(game, playerIdx, sq, price, NO_GROUP);
@@ -284,7 +284,7 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             int owner = sq->data.utility.owner;
             if (owner == -1)
             {
-                // New AI buying logic
+                
                 int price = getDynamicPurchasePrice(game, pos);
                 price = applyEventValueModifier(game, pos, price);
                 attemptPurchase(game, playerIdx, sq, price, NO_GROUP);
@@ -381,7 +381,7 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
     }
 }
 
-// Handles a player's turn if they are in jail. Returns 1 if their turn should end immediately, 0 if they escape and can move.
+// Handles a player's turn if they are in jail.
 int handleJailTurn(GameState *game, int p, int die1, int die2) {
     if (!game->players[p].inJail) return 0;
     

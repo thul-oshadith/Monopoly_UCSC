@@ -24,6 +24,21 @@ void displayRoundSummary(GameState *game);
 
 // Valuation helpers
 int calculateNetWorth(GameState *game, int playerIdx);
+
+void printCurrency(int amount) {
+    if (amount < 0) {
+        printf("-");
+        amount = -amount;
+    }
+    if (amount < 1000) {
+        printf("LKR %d", amount);
+    } else if (amount < 1000000) {
+        printf("LKR %d,%03d", amount / 1000, amount % 1000);
+    } else {
+        printf("LKR %d,%03d,%03d", amount / 1000000, (amount / 1000) % 1000, amount % 1000);
+    }
+}
+
 int getDynamicPurchasePrice(GameState *game, int sqIdx);
 int applyEventValueModifier(GameState *game, int sqIdx, int value);
 int applyDynamicMarketValue(GameState *game, int sqIdx, int value);
@@ -167,11 +182,6 @@ int main(){
 
     }
 
-    // === END OF GAME SUMMARY ===
-    printf("\n========================================\n");
-    printf("         GAME OVER - FINAL RESULTS       \n");
-    printf("========================================\n\n");
-
     // First pass: calculate net worth for each player and find the winner
     int netWorths[PLAYER_COUNT] = {0};
     int winnerIdx = -1;
@@ -187,18 +197,40 @@ int main(){
         }
     }
 
-    // Second pass: print the results
-    for (int i = 0; i < PLAYER_COUNT; i++) {
-        if (game.players[i].bankrupt) {
-            printf("  X %s -- BANKRUPT\n", game.players[i].name);
-        } else if (i == winnerIdx) {
-            printf("  >> WINNER: %s -- Net Worth: LKR %d\n", game.players[i].name, netWorths[i]);
+    if (winnerIdx != -1) {
+        Player *winner = &game.players[winnerIdx];
+        printf("\nGAME OVER\n\n");
+        printf("Winner\n\n");
+        printf("%s\n\n", winner->name);
+        
+        printf("Total Cash\n\n");
+        printCurrency(winner->cash);
+        printf("\n\n");
+        
+        // Calculate Total Property Value just for the winner
+        int outstandingLoans = winner->activeLoan.active ? winner->activeLoan.amount : 0;
+        int accruedInterest = winner->activeLoan.active ? (int)(winner->activeLoan.amount * winner->activeLoan.interestRate) : 0;
+        int totalDebt = outstandingLoans + accruedInterest;
+        
+        // NetWorth = Cash + PropertyValue - Debt -> PropertyValue = NetWorth - Cash + Debt
+        int totalPropertyValue = netWorths[winnerIdx] - winner->cash + totalDebt;
+        
+        printf("Total Property Value\n\n");
+        printCurrency(totalPropertyValue);
+        printf("\n\n");
+        
+        printf("Outstanding Loans\n\n");
+        if (outstandingLoans > 0) {
+            printCurrency(outstandingLoans);
         } else {
-            printf("  %s -- Net Worth: LKR %d\n", game.players[i].name, netWorths[i]);
+            printf("None");
         }
+        printf("\n\n");
+        
+        printf("Net Worth\n\n");
+        printCurrency(netWorths[winnerIdx]);
+        printf("\n\n");
     }
-
-    printf("\n========================================\n");
 
     return 0;
 
