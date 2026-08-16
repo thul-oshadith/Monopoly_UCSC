@@ -184,16 +184,16 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             }
 
             if (effectiveRent > 0) {
-                printf("  >> %s must pay LKR %d rent to %s\n", 
+                printf("  >> %s pay LKR %d rent to %s\n\n", 
                     game->players[playerIdx].name, effectiveRent, game->players[prop->owner].name);
                 payAmount(game, playerIdx, prop->owner, effectiveRent);
             } else {
-                printf("  >> %s pays no rent because the building is closed due to poor condition!\n", game->players[playerIdx].name);
+                printf("  >> %s pays no rent because the building is closed due to poor condition!\n\n", game->players[playerIdx].name);
             }
         }
         else {
             // Player owns it — check if they want to renovate the land (Rule-LK 17)
-            printf("  >> %s owns this property.\n", game->players[playerIdx].name);
+            printf("  >> %s owns this property.\n\n", game->players[playerIdx].name);
             if (prop->propertyAge > DEPRECIATION_GRACE_ROUNDS) {
                 int depPercent = (prop->propertyAge - DEPRECIATION_GRACE_ROUNDS) / DEPRECIATION_INTERVAL;
                 if (depPercent > MAX_DEPRECIATION_PERCENT) depPercent = MAX_DEPRECIATION_PERCENT;
@@ -214,7 +214,7 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
                     if (game->players[playerIdx].cash >= cost) {
                         game->players[playerIdx].cash -= cost;
                         prop->propertyAge = 0;
-                        printf("  >>> %s renovated the property %s for LKR %d, restoring its value!\n", pname, prop->name, cost);
+                        printf("  >>> %s renovated the property %s for LKR %d, restoring its value!\n\n", pname, prop->name, cost);
                     }
                 }
             }
@@ -233,11 +233,11 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             }
             else if (owner == playerIdx)
             {
-                printf(" >> %s owns this railway.\n", game->players[playerIdx].name);
+                printf(" >> %s owns this railway.\n\n", game->players[playerIdx].name);
             }
             else if (sq->data.railway.mortgaged)
             {
-                printf(" >>%s is mortgaged. No rent paid.\n",sq->name);
+                printf(" >>%s is mortgaged. No rent paid.\n\n",sq->name);
             }
             else
             {
@@ -257,9 +257,13 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
                 if (stationCount == 3) rent = 1000;
                 if (stationCount == 4) rent = 2000;
                 
+                if (game->currentRegulation == REG_RAILWAY_MODERNIZATION) {
+                    rent = (int)(rent * 1.25f);
+                }
+                
                 rent = applyEventRentModifier(game, sq->index, rent, 0);
 
-                printf("  >> %s must pay LKR %d rent to %s (owns %d stations)\n", 
+                printf("  >> %s pay LKR %d rent to %s (owns %d stations)\n\n", 
                     game->players[playerIdx].name, rent, game->players[owner].name, stationCount);
                 payAmount(game, playerIdx, owner, rent);
             }
@@ -276,11 +280,11 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             }
             else if (owner == playerIdx)
             {
-                printf(" >> %s owns this utility.\n", game->players[playerIdx].name);
+                printf(" >> %s owns this utility.\n\n", game->players[playerIdx].name);
             }
             else if (sq->data.utility.mortgaged)
             {
-                printf(" >> %s is mortgaged. No rent paid.\n", sq->name);
+                printf(" >> %s is mortgaged. No rent paid.\n\n", sq->name);
             }
             else
             {
@@ -302,8 +306,13 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
                 {
                     rent = diceTotal *10;
                 }
+                
+                if (game->currentRegulation == REG_ELECTRICITY_TARIFF_REVISION) {
+                    rent = (int)(rent * 1.20f);
+                }
+                
                 rent = applyEventRentModifier(game, sq->index, rent, 0);
-                printf("  >> %s must pay LKR %d rent to %s (owns %d utilities. Rolled %d)\n", 
+                printf("  >> %s pay LKR %d rent to %s (owns %d utilities. Rolled %d)\n\n", 
                     game->players[playerIdx].name, rent, game->players[owner].name, utilityCount, diceTotal);
                 payAmount(game, playerIdx, owner, rent);
                 
@@ -312,8 +321,14 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
         }
 
         case SQUARE_TAX:{
-            int tax = sq->data.taxAmount;
-            printf("  >> %s must pay LKR %d in tax\n", game->players[playerIdx].name, tax);
+            // Charge 15% of the player's current cash in hand
+            int tax = (int)(game->players[playerIdx].cash * 0.15f);
+            
+            if (game->currentRegulation == REG_INCREASE_PROPERTY_TAX) {
+                tax = (int)(tax * 1.50f);
+            }
+            
+            printf("  >> %s pays LKR %d in Income Tax\n\n", game->players[playerIdx].name, tax);
             payAmount(game, playerIdx, -1, tax); // -1 means they pay the bank!
             break;
         }
@@ -324,7 +339,7 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
               game->players[playerIdx].position = 10;
               game->players[playerIdx].inJail = 1;
               game->players[playerIdx].jailTurns = 0;
-              printf(" >> %s was sent to JAIL! \n", game->players[playerIdx].name);
+              printf(" >> %s was sent to JAIL! \n\n", game->players[playerIdx].name);
 
             }
         
@@ -346,7 +361,7 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
 
         case SQUARE_JAIL:
             // Just visiting — nothing happens
-            printf("  >> Just visiting jail.\n");
+            printf("  >> Just visiting jail.\n\n");
             break;
 
         case SQUARE_GO:

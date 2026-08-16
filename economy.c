@@ -407,3 +407,57 @@ void processInflation(GameState *game) {
         }
     }
 }
+
+// Prototype for payAmount
+void payAmount(GameState *game, int payerIdx, int payeeIdx, int amount);
+
+// Triggers government regulations every 20 rounds (Rule LK-24)
+void processGovernmentRegulations(GameState *game) {
+    game->currentRegulation = (GovernmentRegulation)(rand() % 8 + 1); // 1 to 8
+    
+    printf("\n======================================================\n");
+    printf("  🏛️  GOVERNMENT REGULATION ISSUED!  🏛️\n");
+    
+    switch (game->currentRegulation) {
+        case REG_INCREASE_PROPERTY_TAX:
+            printf("  Regulation: INCREASE PROPERTY TAX\n  Income Tax increases by 50%%.\n");
+            break;
+        case REG_REDUCE_LOAN_INTEREST:
+            printf("  Regulation: REDUCE LOAN INTEREST\n  Loan interest decreases by 2%%.\n");
+            break;
+        case REG_HOUSING_SUBSIDY:
+            printf("  Regulation: HOUSING SUBSIDY\n  House construction costs reduce 30%%.\n");
+            break;
+        case REG_LUXURY_PROPERTY_TAX:
+            printf("  Regulation: LUXURY PROPERTY TAX\n  Instant 25%% tax on properties with hotels!\n");
+            
+            // Instantly charge 25% of total property value for hotels
+            for (int i = 0; i < SQUARE_COUNT; i++) {
+                if (game->board[i].type == SQUARE_PROPERTY) {
+                    Property *prop = &game->board[i].data.property;
+                    if (prop->hotel > 0 && prop->owner != -1) {
+                        int totalValue = prop->purchasePrice + (4 * prop->houseCost) + prop->hotelCost;
+                        int tax = (int)(totalValue * 0.25f);
+                        printf("  >> %s hit by Luxury Tax on %s! Pays LKR %d.\n", game->players[prop->owner].name, prop->name, tax);
+                        payAmount(game, prop->owner, -1, tax);
+                    }
+                }
+            }
+            break;
+        case REG_RAILWAY_MODERNIZATION:
+            printf("  Regulation: RAILWAY MODERNIZATION\n  Railway rents increase 25%%.\n");
+            break;
+        case REG_ELECTRICITY_TARIFF_REVISION:
+            printf("  Regulation: ELECTRICITY TARIFF REVISION\n  Utility rents increase 20%%.\n");
+            break;
+        case REG_INSURANCE_REGULATION:
+            printf("  Regulation: INSURANCE REGULATION\n  Insurance premiums decrease 15%%.\n");
+            break;
+        case REG_ANTI_SPECULATION_ACT:
+            printf("  Regulation: ANTI-SPECULATION ACT\n  Players may own at most 3 undeveloped properties.\n");
+            break;
+        default:
+            break;
+    }
+    printf("======================================================\n\n");
+}

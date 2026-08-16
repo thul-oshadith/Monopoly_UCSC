@@ -124,6 +124,10 @@ void developProperties(GameState *game, int playerIdx) {
                 cost = applyEventHouseCostModifier(game, cost);
                 cost = applyDynamicMarketHouseCost(game, groups[g], cost);
                 
+                if (game->currentRegulation == REG_HOUSING_SUBSIDY) {
+                    cost = (int)(cost * 0.70f); // 30% discount
+                }
+                
                 // --- AI DECISION: Should we build? ---
                 int buildDecision = 0;
 
@@ -155,7 +159,10 @@ void developProperties(GameState *game, int playerIdx) {
                 // --- OPPORTUNISTIC TRADER ---
                 // Balanced approach, delays construction during inflation
                 else if (strcmp(player->name, "Opportunistic Trader") == 0) {
-                    if (game->currentInflationRate > 0) {
+                    if (game->currentRegulation == REG_HOUSING_SUBSIDY) {
+                        if (player->cash >= cost) buildDecision = 1;
+                    }
+                    else if (game->currentInflationRate > 0) {
                         buildDecision = 0; // Delays construction
                     } else if (player->cash - cost >= 500) {
                         buildDecision = 1;

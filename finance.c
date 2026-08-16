@@ -19,6 +19,23 @@ void attemptPurchase(GameState *game, int playerIdx, Square *sq, int purchasePri
     Player *player = &game->players[playerIdx];
     int buyDecision = 0;
 
+    // Rule LK-24: ANTI-SPECULATION ACT
+    if (game->currentRegulation == REG_ANTI_SPECULATION_ACT) {
+        int undevelopedCount = 0;
+        for (int i = 0; i < SQUARE_COUNT; i++) {
+            if (game->board[i].type == SQUARE_PROPERTY && game->board[i].data.property.owner == playerIdx) {
+                if (game->board[i].data.property.houses == 0 && game->board[i].data.property.hotel == 0) {
+                    undevelopedCount++;
+                }
+            }
+        }
+        if (undevelopedCount >= 3) {
+            printf("  [REGULATION] %s cannot buy %s (Anti-Speculation Act: owns %d undeveloped)\n", player->name, sq->name, undevelopedCount);
+            startAuction(game, sq->index);
+            return;
+        }
+    }
+
     // --- AGGRESSIVE INVESTOR ---
     // Rule: "Always purchases if sufficient funds remain to pay at least one future rent"
     // We use 100 (the cheapest rent on the board) as the minimum rent threshold
@@ -62,6 +79,14 @@ void attemptPurchase(GameState *game, int playerIdx, Square *sq, int purchasePri
             }
         } else if (player->cash - purchasePrice > player->cash * 3 / 10) {
             buyDecision = 1;
+        }
+        
+        // Buy aggressively if government regulations boost rents
+        if (game->currentRegulation == REG_RAILWAY_MODERNIZATION && sq->type == SQUARE_RAILWAY) {
+            if (player->cash >= purchasePrice) buyDecision = 1;
+        }
+        if (game->currentRegulation == REG_ELECTRICITY_TARIFF_REVISION && sq->type == SQUARE_UTILITY) {
+            if (player->cash >= purchasePrice) buyDecision = 1;
         }
     }
 
@@ -332,7 +357,14 @@ void takeLoan(GameState *game, int playerIdx, int amountToBorrow) {
     }
 
     p->activeLoan.amount = amountToBorrow;
-    p->activeLoan.interestRate = applyEventLoanInterest(game, game->currentLoanInterestRate); // Base depends on inflation, modified by events
+    
+    float finalInterest = applyEventLoanInterest(game, game->currentLoanInterestRate);
+    if (game->currentRegulation == REG_REDUCE_LOAN_INTEREST) {
+        finalInterest -= 0.02f; // Reduce by 2%
+        if (finalInterest < 0.0f) finalInterest = 0.0f;
+    }
+    
+    p->activeLoan.interestRate = finalInterest;
     p->activeLoan.remainingRounds = 20;
     p->activeLoan.active = 1;
     p->cash += amountToBorrow;
@@ -515,6 +547,10 @@ void handleInsuranceSquare(GameState *game, int playerIdx) {
                     
                     if (game->currentEvent == EVENT_HEAVY_MONSOON) {
                         premium = premium * 150 / 100; // 50% increase
+                    }
+                    
+                    if (game->currentRegulation == REG_INSURANCE_REGULATION) {
+                        premium = premium * 85 / 100; // 15% decrease
                     }
                     
                     if (player->cash >= premium) {

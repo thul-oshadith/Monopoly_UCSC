@@ -16,10 +16,11 @@ void processEndRoundInsurance(GameState *game);
 void triggerRandomDisaster(GameState *game);
 void processDynamicPropertyMarket(GameState *game);
 void processInflation(GameState *game);
+void processGovernmentRegulations(GameState *game);
 void attemptToUnmortgage(GameState *game, int playerIdx);
 
 int main(){
-    srand(42); // seed random numbers for dice
+    srand(time(NULL)); // seed random numbers for dice
     GameState game;
     game.currentEvent = EVENT_NONE;
     game.currentRound = 0;
@@ -116,14 +117,14 @@ int main(){
 
             game.players[p].position = newPosition;
 
+            printf("%s rolled %d.\n", game.players[p].name, diceTotal);
+            printf("%s moves from Square %d to Square %d.\n", game.players[p].name, oldPosition, newPosition);
+
             if (newPosition < oldPosition){
                 game.players[p].cash += 2000;
                 goCount[p]++;
                 printf("%s passed Go! Collected LKR 2000\n", game.players[p].name);
             }
-            
-            printf("%s rolled %d.\n", game.players[p].name, diceTotal);
-            printf("%s moves from Square %d to Square %d.\n", game.players[p].name, oldPosition, newPosition);
 
             handleLanding(&game , p, diceTotal);
             developProperties(&game, p);
@@ -205,6 +206,11 @@ int main(){
                     break;
             }
             printf("======================================================\n\n");
+        }
+
+        // Process Government Regulations (Rule LK-24)
+        if (game.currentRound > 0 && game.currentRound % 20 == 0) {
+            processGovernmentRegulations(&game);
         }
 
     }

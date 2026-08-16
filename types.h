@@ -59,6 +59,18 @@ typedef enum EconomicEvent{
     EVENT_POLITICAL_UNREST
 } EconomicEvent;
 
+typedef enum GovernmentRegulation{
+    REG_NONE,
+    REG_INCREASE_PROPERTY_TAX,
+    REG_REDUCE_LOAN_INTEREST,
+    REG_HOUSING_SUBSIDY,
+    REG_LUXURY_PROPERTY_TAX,
+    REG_RAILWAY_MODERNIZATION,
+    REG_ELECTRICITY_TARIFF_REVISION,
+    REG_INSURANCE_REGULATION,
+    REG_ANTI_SPECULATION_ACT
+} GovernmentRegulation;
+
 typedef struct Player{
     char name[30];
     int position;
@@ -162,6 +174,7 @@ typedef struct GameState{
     int turnOrder[PLAYER_COUNT];
     
     EconomicEvent currentEvent;
+    GovernmentRegulation currentRegulation;
     
     PropertyGroup currentBoomGroup;
     PropertyGroup currentDeclineGroup;
