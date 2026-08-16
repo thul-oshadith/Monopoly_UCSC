@@ -115,47 +115,51 @@ int main(){
                 gameOver = 1;
                 break;
             }
+        } // End of player turn loop
 
-            int minGO = goCount[game.turnOrder[0]];
-            for (int i = 1; i < PLAYER_COUNT; i++){
-                int idx = game.turnOrder[i];
-                if (!game.players[idx].bankrupt && goCount[idx] < minGO)
-                {
-                    minGO = goCount[idx];
+        // Calculate minGO across all active players
+        int minGO = 99999;
+        for (int i = 0; i < PLAYER_COUNT; i++){
+            int idx = game.turnOrder[i];
+            if (!game.players[idx].bankrupt && goCount[idx] < minGO) {
+                minGO = goCount[idx];
+            }
+        }
 
+        if (minGO >= 500){
+            gameOver = 1;
+            break;
+        }
+
+        // If minGO has increased, it means all active players have completed another full lap.
+        // This marks a new ROUND.
+        if (minGO > game.currentRound) {
+            int roundsPassed = minGO - game.currentRound;
+            
+            for (int r = 0; r < roundsPassed; r++) {
+                // Process loans and depreciation at the end of the round
+                processEndRoundLoans(&game);
+                processDepreciation(&game);
+                processEndRoundInsurance(&game);
+                
+                game.currentRound++;
+                
+                if (game.currentRound > 0 && game.currentRound % 10 == 0) {
+                    triggerRandomDisaster(&game);
+                    processDynamicPropertyMarket(&game);
+                    processInflation(&game);
                 }
 
+                // Process Economic Events (Rule-LK 18)
+                if (game.currentRound > 0 && game.currentRound % 15 == 0) {
+                    triggerEconomicEvent(&game);
+                }
 
+                // Process Government Regulations (Rule LK-24)
+                if (game.currentRound > 0 && game.currentRound % 20 == 0) {
+                    processGovernmentRegulations(&game);
+                }
             }
-
-            if (minGO>= 500){
-                gameOver = 1;
-                break;
-            }
-
-        }
-
-        // Process loans and depreciation at the end of the round
-        processEndRoundLoans(&game);
-        processDepreciation(&game);
-        processEndRoundInsurance(&game);
-        
-        if (game.currentRound > 0 && game.currentRound % 10 == 0) {
-            triggerRandomDisaster(&game);
-            processDynamicPropertyMarket(&game);
-            processInflation(&game);
-        }
-
-        game.currentRound++;
-
-        // Process Economic Events (Rule-LK 18)
-        if (game.currentRound > 0 && game.currentRound % 15 == 0) {
-            triggerEconomicEvent(&game);
-        }
-
-        // Process Government Regulations (Rule LK-24)
-        if (game.currentRound > 0 && game.currentRound % 20 == 0) {
-            processGovernmentRegulations(&game);
         }
 
     }
