@@ -15,6 +15,7 @@ void processDepreciation(GameState *game);
 void processEndRoundInsurance(GameState *game);
 void triggerRandomDisaster(GameState *game);
 void processDynamicPropertyMarket(GameState *game);
+void attemptToUnmortgage(GameState *game, int playerIdx);
 
 int main(){
     srand(time(NULL)); // seed random numbers for dice
@@ -56,6 +57,9 @@ int main(){
             if(game.players[p].bankrupt){
                 continue;
             }
+
+            // AI Unmortgages properties if they have enough cash
+            attemptToUnmortgage(&game, p);
 
             // Rule 27: Maintenance at the start of the turn
             performMaintenance(&game, p);

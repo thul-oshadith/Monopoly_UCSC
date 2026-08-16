@@ -169,6 +169,75 @@ void startAuction(GameState *game, int sqIdx) {
 }
 
 
+// ------------------------------------------------------------------------------------------------
+// VOLUNTARY MORTGAGES & BANKRUPTCY LOGIC
+// ------------------------------------------------------------------------------------------------
+int attemptToRaiseFunds(GameState *game, int playerIdx, int amountNeeded) {
+    Player *payer = &game->players[playerIdx];
+    
+    // 1. Sell Hotels (at 50% cost)
+    for (int i = 0; i < SQUARE_COUNT; i++) {
+        if (payer->cash >= amountNeeded) return 1;
+        
+        Square *sq = &game->board[i];
+        if (sq->type == SQUARE_PROPERTY && sq->data.property.owner == playerIdx && sq->data.property.hotel > 0) {
+            sq->data.property.hotel = 0;
+            int cashGained = sq->data.property.hotelCost / 2;
+            payer->cash += cashGained;
+            printf("  >> %s sold the hotel on %s for LKR %d to raise funds!\n", payer->name, sq->name, cashGained);
+        }
+    }
+
+    // 2. Sell Houses (at 50% cost)
+    for (int i = 0; i < SQUARE_COUNT; i++) {
+        if (payer->cash >= amountNeeded) return 1;
+        
+        Square *sq = &game->board[i];
+        if (sq->type == SQUARE_PROPERTY && sq->data.property.owner == playerIdx) {
+            while (sq->data.property.houses > 0 && payer->cash < amountNeeded) {
+                sq->data.property.houses--;
+                int cashGained = sq->data.property.houseCost / 2;
+                payer->cash += cashGained;
+                printf("  >> %s sold a house on %s for LKR %d to raise funds!\n", payer->name, sq->name, cashGained);
+            }
+        }
+    }
+    
+    // 3. Mortgage Properties (if no buildings and not loanLocked)
+    for (int i = 0; i < SQUARE_COUNT; i++) {
+        if (payer->cash >= amountNeeded) return 1;
+        
+        Square *sq = &game->board[i];
+        if (sq->type == SQUARE_PROPERTY && sq->data.property.owner == playerIdx && 
+            sq->data.property.houses == 0 && sq->data.property.hotel == 0 && 
+            !sq->data.property.mortgaged && !sq->data.property.loanLocked) {
+            
+            sq->data.property.mortgaged = 1;
+            int cashGained = getDynamicMortgageValue(game, i);
+            payer->cash += cashGained;
+            printf("  >> %s mortgaged %s for LKR %d to raise funds!\n", payer->name, sq->name, cashGained);
+        }
+        else if (sq->type == SQUARE_RAILWAY && sq->data.railway.owner == playerIdx && 
+                 !sq->data.railway.mortgaged && !sq->data.railway.loanLocked) {
+                 
+            sq->data.railway.mortgaged = 1;
+            int cashGained = getDynamicMortgageValue(game, i);
+            payer->cash += cashGained;
+            printf("  >> %s mortgaged %s for LKR %d to raise funds!\n", payer->name, sq->name, cashGained);
+        }
+        else if (sq->type == SQUARE_UTILITY && sq->data.utility.owner == playerIdx && 
+                 !sq->data.utility.mortgaged && !sq->data.utility.loanLocked) {
+                 
+            sq->data.utility.mortgaged = 1;
+            int cashGained = getDynamicMortgageValue(game, i);
+            payer->cash += cashGained;
+            printf("  >> %s mortgaged %s for LKR %d to raise funds!\n", payer->name, sq->name, cashGained);
+        }
+    }
+    
+    return (payer->cash >= amountNeeded) ? 1 : 0;
+}
+
 // Helper: Processes payments and handles bankruptcy if a player cannot pay
 void payAmount(GameState *game, int payerIdx, int payeeIdx, int amount) {
     Player *payer = &game->players[payerIdx];
@@ -182,8 +251,16 @@ void payAmount(GameState *game, int payerIdx, int payeeIdx, int amount) {
             game->players[payeeIdx].cash += amount;
         }
     } else {
-        // Player cannot afford the payment! (We will add Mortgage logic here later)
-        // For now, they go Bankrupt immediately.
+        // Player cannot afford the payment! Try to raise funds.
+        int raisedEnough = attemptToRaiseFunds(game, payerIdx, amount);
+        
+        if (raisedEnough) {
+            payer->cash -= amount;
+            if (payeeIdx != -1) {
+                game->players[payeeIdx].cash += amount;
+            }
+        } else {
+            // STILL bankrupt!
         
         payer->bankrupt = 1;
         payer->cash = 0; // Wipe their remaining cash
@@ -210,6 +287,7 @@ void payAmount(GameState *game, int payerIdx, int payeeIdx, int amount) {
                 game->board[i].data.utility.mortgaged = 0;
                 printf("  >> %s is returned to the Bank! (Auctioning...)\n", game->board[i].name);
                 startAuction(game, i);
+            }
             }
         }
     }
