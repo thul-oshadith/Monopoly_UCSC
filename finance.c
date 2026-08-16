@@ -2,6 +2,10 @@
 #include <string.h>
 #include "types.h"
 
+int getDynamicMortgageValue(GameState *game, int sqIdx);
+int getDynamicPurchasePrice(GameState *game, int sqIdx);
+int applyEventValueModifier(GameState *game, int sqIdx, int value);
+int applyDepreciationModifier(GameState *game, int sqIdx, int value);
 // Forward declaration of helper functions
 int checkIfCompletesSet(GameState *game, int playerIdx, PropertyGroup group);
 void startAuction(GameState *game, int sqIdx);
@@ -79,11 +83,12 @@ void attemptPurchase(GameState *game, int playerIdx, Square *sq, int purchasePri
 // Executes an auction for an unowned property
 void startAuction(GameState *game, int sqIdx) {
     Square *sq = &game->board[sqIdx];
-    int marketValue = 0;
+    int marketValue = getDynamicPurchasePrice(game, sqIdx);
     
-    if (sq->type == SQUARE_PROPERTY) marketValue = sq->data.property.purchasePrice;
-    else if (sq->type == SQUARE_RAILWAY) marketValue = sq->data.railway.purchasePrice;
-    else if (sq->type == SQUARE_UTILITY) marketValue = sq->data.utility.purchasePrice;
+    // Auction starting prices decrease by 25% during a Decline
+    if (sq->type == SQUARE_PROPERTY && sq->data.property.group == game->currentDeclineGroup) {
+        marketValue = (marketValue * 75) / 100;
+    }
     
     if (marketValue == 0) return; // Should not happen
     
@@ -216,11 +221,11 @@ int calculateMaxLoan(GameState *game, int playerIdx) {
     for (int i = 0; i < SQUARE_COUNT; i++) {
         Square *sq = &game->board[i];
         if (sq->type == SQUARE_PROPERTY && sq->data.property.owner == playerIdx && !sq->data.property.mortgaged && !sq->data.property.loanLocked) {
-            totalMortgageValue += applyDepreciationModifier(game, i, applyEventValueModifier(game, i, sq->data.property.mortgageValue));
+            totalMortgageValue += applyDepreciationModifier(game, i, applyEventValueModifier(game, i, getDynamicMortgageValue(game, i)));
         } else if (sq->type == SQUARE_RAILWAY && sq->data.railway.owner == playerIdx && !sq->data.railway.mortgaged && !sq->data.railway.loanLocked) {
-            totalMortgageValue += applyEventValueModifier(game, i, sq->data.railway.mortgageValue);
+            totalMortgageValue += applyEventValueModifier(game, i, getDynamicMortgageValue(game, i));
         } else if (sq->type == SQUARE_UTILITY && sq->data.utility.owner == playerIdx && !sq->data.utility.mortgaged && !sq->data.utility.loanLocked) {
-            totalMortgageValue += applyEventValueModifier(game, i, sq->data.utility.mortgageValue);
+            totalMortgageValue += applyEventValueModifier(game, i, getDynamicMortgageValue(game, i));
         }
     }
     return (totalMortgageValue * 75) / 100;
@@ -238,13 +243,13 @@ void takeLoan(GameState *game, int playerIdx, int amountToBorrow) {
         Square *sq = &game->board[i];
         if (sq->type == SQUARE_PROPERTY && sq->data.property.owner == playerIdx && !sq->data.property.mortgaged && !sq->data.property.loanLocked) {
             sq->data.property.loanLocked = 1;
-            collateralLocked += applyDepreciationModifier(game, i, applyEventValueModifier(game, i, sq->data.property.mortgageValue));
+            collateralLocked += applyDepreciationModifier(game, i, applyEventValueModifier(game, i, getDynamicMortgageValue(game, i)));
         } else if (sq->type == SQUARE_RAILWAY && sq->data.railway.owner == playerIdx && !sq->data.railway.mortgaged && !sq->data.railway.loanLocked) {
             sq->data.railway.loanLocked = 1;
-            collateralLocked += applyEventValueModifier(game, i, sq->data.railway.mortgageValue);
+            collateralLocked += applyEventValueModifier(game, i, getDynamicMortgageValue(game, i));
         } else if (sq->type == SQUARE_UTILITY && sq->data.utility.owner == playerIdx && !sq->data.utility.mortgaged && !sq->data.utility.loanLocked) {
             sq->data.utility.loanLocked = 1;
-            collateralLocked += applyEventValueModifier(game, i, sq->data.utility.mortgageValue);
+            collateralLocked += applyEventValueModifier(game, i, getDynamicMortgageValue(game, i));
         }
     }
 

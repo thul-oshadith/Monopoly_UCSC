@@ -117,6 +117,8 @@ void attemptPurchase(GameState *game, int playerIdx, Square *sq, int purchasePri
 void handleBankSquare(GameState *game, int playerIdx);
 void payAmount(GameState *game, int payerIdx, int payeeIdx, int amount);
 int applyEventRentModifier(GameState *game, int sqIdx, int rent, int isHotel);
+int applyDynamicMarketRent(GameState *game, int sqIdx, int rent);
+int getDynamicPurchasePrice(GameState *game, int sqIdx);
 
 void handleInsuranceSquare(GameState *game, int playerIdx);
 
@@ -133,7 +135,8 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
         Property *prop = &sq->data.property;
         if (prop->owner == -1) {
          // New AI buying logic
-         attemptPurchase(game, playerIdx, sq, prop->purchasePrice, prop->group);
+         int price = getDynamicPurchasePrice(game, pos);
+         attemptPurchase(game, playerIdx, sq, price, prop->group);
             
         } 
         else if (prop->owner != playerIdx) {
@@ -146,6 +149,7 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             else if (prop->houses == 4) multiplier = 7;
             int effectiveRent = prop->rent * multiplier;
             effectiveRent = applyEventRentModifier(game, sq->index, effectiveRent, prop->hotel);
+            effectiveRent = applyDynamicMarketRent(game, sq->index, effectiveRent);
 
             // 1. Apply Property Depreciation (Rules 15-16)
             if (prop->propertyAge > DEPRECIATION_GRACE_ROUNDS) {
@@ -224,7 +228,8 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             if (owner == -1)
             {
                 // New AI buying logic
-                attemptPurchase(game, playerIdx, sq, sq->data.railway.purchasePrice, NO_GROUP);
+                int price = getDynamicPurchasePrice(game, pos);
+                attemptPurchase(game, playerIdx, sq, price, NO_GROUP);
             }
             else if (owner == playerIdx)
             {
@@ -266,7 +271,8 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             if (owner == -1)
             {
                 // New AI buying logic
-                attemptPurchase(game, playerIdx, sq, sq->data.utility.purchasePrice, NO_GROUP);
+                int price = getDynamicPurchasePrice(game, pos);
+                attemptPurchase(game, playerIdx, sq, price, NO_GROUP);
             }
             else if (owner == playerIdx)
             {

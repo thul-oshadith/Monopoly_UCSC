@@ -162,6 +162,11 @@ typedef struct GameState{
     int turnOrder[PLAYER_COUNT];
     
     EconomicEvent currentEvent;
+    
+    PropertyGroup currentBoomGroup;
+    PropertyGroup currentDeclineGroup;
+    int boomCooldowns[8];    // Cooldown before a group can Boom again
+    int declineCooldowns[8]; // Cooldown before a group can Decline again
 
 }GameState;
 

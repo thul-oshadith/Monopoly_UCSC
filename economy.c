@@ -199,3 +199,152 @@ void triggerRandomDisaster(GameState *game) {
     }
     printf("======================================================\n");
 }
+
+// -------------------------------------------------------------
+// DYNAMIC PROPERTY MARKET (Rules LK-30 to LK-34)
+// -------------------------------------------------------------
+
+// Helper to get group name as string
+const char* getGroupName(PropertyGroup group) {
+    switch(group) {
+        case BROWN: return "Brown";
+        case LIGHT_BLUE: return "Light Blue";
+        case PINK: return "Pink";
+        case ORANGE: return "Orange";
+        case RED: return "Red";
+        case YELLOW: return "Yellow";
+        case GREEN: return "Green";
+        case DARK_BLUE: return "Dark Blue";
+        default: return "None";
+    }
+}
+
+void processDynamicPropertyMarket(GameState *game) {
+    // 1. Tick down cooldowns
+    for (int i = 0; i < 8; i++) {
+        if (game->boomCooldowns[i] > 0) game->boomCooldowns[i]--;
+        if (game->declineCooldowns[i] > 0) game->declineCooldowns[i]--;
+    }
+    
+    // 2. Review market every 10 rounds
+    if (game->currentRound > 0 && game->currentRound % 10 == 0) {
+        game->currentBoomGroup = NO_GROUP;
+        game->currentDeclineGroup = NO_GROUP;
+        
+        // Find available Boom groups
+        int availableBoomGroups[8];
+        int boomCount = 0;
+        for (int i = 0; i < 8; i++) {
+            if (game->boomCooldowns[i] == 0) {
+                availableBoomGroups[boomCount++] = i;
+            }
+        }
+        
+        if (boomCount > 0) {
+            int boomIdx = rand() % boomCount;
+            game->currentBoomGroup = (PropertyGroup)availableBoomGroups[boomIdx];
+            game->boomCooldowns[game->currentBoomGroup] = 30;    // 30 rounds before Booming again
+            game->declineCooldowns[game->currentBoomGroup] = 10; // 10 rounds before it can Decline
+        }
+        
+        // Find available Decline groups
+        int availableDeclineGroups[8];
+        int declineCount = 0;
+        for (int i = 0; i < 8; i++) {
+            // Must not be on decline cooldown, and must not be the group we JUST picked for boom
+            if (game->declineCooldowns[i] == 0 && i != game->currentBoomGroup) {
+                availableDeclineGroups[declineCount++] = i;
+            }
+        }
+        
+        if (declineCount > 0) {
+            int declineIdx = rand() % declineCount;
+            game->currentDeclineGroup = (PropertyGroup)availableDeclineGroups[declineIdx];
+            game->declineCooldowns[game->currentDeclineGroup] = 30; // 30 rounds before Declining again
+            game->boomCooldowns[game->currentDeclineGroup] = 10;    // 10 rounds before it can Boom
+        }
+        
+        if (game->currentBoomGroup != NO_GROUP || game->currentDeclineGroup != NO_GROUP) {
+            printf("\n======================================================\n");
+            printf("  >>> DYNAMIC PROPERTY MARKET REVIEW <<<\n");
+            if (game->currentBoomGroup != NO_GROUP) {
+                printf("  📈 MARKET BOOM: %s Group properties!\n", getGroupName(game->currentBoomGroup));
+            }
+            if (game->currentDeclineGroup != NO_GROUP) {
+                printf("  📉 MARKET DECLINE: %s Group properties!\n", getGroupName(game->currentDeclineGroup));
+            }
+            printf("======================================================\n");
+        }
+    }
+}
+
+int applyDynamicMarketRent(GameState *game, int sqIdx, int rent) {
+    Square *sq = &game->board[sqIdx];
+    if (sq->type == SQUARE_PROPERTY) {
+        PropertyGroup group = sq->data.property.group;
+        if (group == game->currentBoomGroup) {
+            rent = (rent * 125) / 100; // +25%
+        } else if (group == game->currentDeclineGroup) {
+            rent = (rent * 80) / 100; // -20%
+        }
+    }
+    return rent;
+}
+
+int applyDynamicMarketValue(GameState *game, int sqIdx, int value) {
+    Square *sq = &game->board[sqIdx];
+    if (sq->type == SQUARE_PROPERTY) {
+        PropertyGroup group = sq->data.property.group;
+        if (group == game->currentBoomGroup) {
+            value = (value * 120) / 100; // +20%
+        } else if (group == game->currentDeclineGroup) {
+            value = (value * 85) / 100; // -15%
+        }
+    }
+    return value;
+}
+
+int applyDynamicMarketHouseCost(GameState *game, PropertyGroup group, int cost) {
+    if (group == game->currentBoomGroup) {
+        cost = (cost * 110) / 100; // +10%
+    }
+    return cost;
+}
+
+int getDynamicPurchasePrice(GameState *game, int sqIdx) {
+    Square *sq = &game->board[sqIdx];
+    int price = 0;
+    if (sq->type == SQUARE_PROPERTY) {
+        price = sq->data.property.purchasePrice;
+        PropertyGroup group = sq->data.property.group;
+        if (group == game->currentBoomGroup) {
+            price = (price * 115) / 100; // +15%
+        } else if (group == game->currentDeclineGroup) {
+            price = (price * 85) / 100; // -15%
+        }
+    } else if (sq->type == SQUARE_RAILWAY) {
+        price = sq->data.railway.purchasePrice;
+    } else if (sq->type == SQUARE_UTILITY) {
+        price = sq->data.utility.purchasePrice;
+    }
+    return price;
+}
+
+int getDynamicMortgageValue(GameState *game, int sqIdx) {
+    Square *sq = &game->board[sqIdx];
+    int mValue = 0;
+    if (sq->type == SQUARE_PROPERTY) {
+        mValue = sq->data.property.mortgageValue;
+        PropertyGroup group = sq->data.property.group;
+        if (group == game->currentBoomGroup) {
+            mValue = (mValue * 115) / 100; // +15%
+        } else if (group == game->currentDeclineGroup) {
+            mValue = (mValue * 90) / 100; // -10%
+        }
+    } else if (sq->type == SQUARE_RAILWAY) {
+        mValue = sq->data.railway.mortgageValue;
+    } else if (sq->type == SQUARE_UTILITY) {
+        mValue = sq->data.utility.mortgageValue;
+    }
+    return mValue;
+}

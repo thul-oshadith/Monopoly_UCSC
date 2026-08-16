@@ -5,6 +5,7 @@
 // Forward declaration
 int hasMonopoly(GameState *game, int playerIdx, PropertyGroup group);
 int applyEventHouseCostModifier(GameState *game, int cost);
+int applyDynamicMarketHouseCost(GameState *game, PropertyGroup group, int cost);
 
 // Finds the property in the group with the fewest buildings (to enforce even-build rule)
 // Returns the square index, or -1 if all are fully upgraded to hotels
@@ -82,6 +83,7 @@ void developProperties(GameState *game, int playerIdx) {
                     cost = prop->houseCost;   // Next step is a house
                 }
                 cost = applyEventHouseCostModifier(game, cost);
+                cost = applyDynamicMarketHouseCost(game, groups[g], cost);
                 
                 // --- AI DECISION: Should we build? ---
                 int buildDecision = 0;
