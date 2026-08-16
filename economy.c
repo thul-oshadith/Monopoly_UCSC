@@ -348,3 +348,62 @@ int getDynamicMortgageValue(GameState *game, int sqIdx) {
     }
     return mValue;
 }
+
+// -------------------------------------------------------------
+// INFLATION (Rules LK-12 to LK-14)
+// -------------------------------------------------------------
+
+void processInflation(GameState *game) {
+    // Possible inflation rates: -3%, 0%, 2%, 5%, 8%, 12%
+    float possibleRates[] = {-0.03f, 0.00f, 0.02f, 0.05f, 0.08f, 0.12f};
+    int rateIdx = rand() % 6;
+    float rate = possibleRates[rateIdx];
+    
+    game->currentInflationRate = rate;
+    
+    // Set loan interest rate based on inflation severity
+    // Moderate (5%, 8%) -> 10% interest
+    // High (12%) -> 12% interest
+    // Otherwise -> 8% interest
+    if (rate >= 0.04f && rate <= 0.09f) {
+        game->currentLoanInterestRate = 0.10f;
+    } else if (rate >= 0.11f) {
+        game->currentLoanInterestRate = 0.12f;
+    } else {
+        game->currentLoanInterestRate = 0.08f;
+    }
+    
+    // Announce Inflation
+    printf("\n======================================================\n");
+    printf("  >>> NATIONAL ECONOMY REVIEW <<<\n");
+    if (rate < 0) {
+        printf("  📉 DEFLATION! The economy shrank by %.0f%%.\n", -rate * 100);
+    } else if (rate == 0) {
+        printf("  ⚖️ STAGNATION. The economy remains stable at 0%% inflation.\n");
+    } else {
+        printf("  📈 INFLATION! The economy grew by %.0f%%.\n", rate * 100);
+    }
+    printf("  🏦 New Loan Interest Rate: %.0f%%\n", game->currentLoanInterestRate * 100);
+    printf("======================================================\n");
+    
+    // Compound all base property values (Rule LK-14)
+    if (rate != 0.0f) {
+        float multiplier = 1.0f + rate;
+        for (int i = 0; i < SQUARE_COUNT; i++) {
+            Square *sq = &game->board[i];
+            if (sq->type == SQUARE_PROPERTY) {
+                sq->data.property.purchasePrice = (int)(sq->data.property.purchasePrice * multiplier);
+                sq->data.property.mortgageValue = (int)(sq->data.property.mortgageValue * multiplier);
+                sq->data.property.rent = (int)(sq->data.property.rent * multiplier);
+                sq->data.property.houseCost = (int)(sq->data.property.houseCost * multiplier);
+                sq->data.property.hotelCost = (int)(sq->data.property.hotelCost * multiplier);
+            } else if (sq->type == SQUARE_RAILWAY) {
+                sq->data.railway.purchasePrice = (int)(sq->data.railway.purchasePrice * multiplier);
+                sq->data.railway.mortgageValue = (int)(sq->data.railway.mortgageValue * multiplier);
+            } else if (sq->type == SQUARE_UTILITY) {
+                sq->data.utility.purchasePrice = (int)(sq->data.utility.purchasePrice * multiplier);
+                sq->data.utility.mortgageValue = (int)(sq->data.utility.mortgageValue * multiplier);
+            }
+        }
+    }
+}

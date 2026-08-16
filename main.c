@@ -15,10 +15,11 @@ void processDepreciation(GameState *game);
 void processEndRoundInsurance(GameState *game);
 void triggerRandomDisaster(GameState *game);
 void processDynamicPropertyMarket(GameState *game);
+void processInflation(GameState *game);
 void attemptToUnmortgage(GameState *game, int playerIdx);
 
 int main(){
-    srand(time(NULL)); // seed random numbers for dice
+    srand(42); // seed random numbers for dice
     GameState game;
     game.currentEvent = EVENT_NONE;
     game.currentRound = 0;
@@ -29,6 +30,9 @@ int main(){
         game.boomCooldowns[i] = 0;
         game.declineCooldowns[i] = 0;
     }
+    
+    game.currentInflationRate = 0.0f;
+    game.currentLoanInterestRate = 0.08f;
     
     // Initialize board
     init_Board(&game);
@@ -160,8 +164,9 @@ int main(){
         
         if (game.currentRound > 0 && game.currentRound % 10 == 0) {
             triggerRandomDisaster(&game);
+            processDynamicPropertyMarket(&game);
+            processInflation(&game);
         }
-        processDynamicPropertyMarket(&game);
 
         game.currentRound++;
 

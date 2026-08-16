@@ -153,9 +153,13 @@ void developProperties(GameState *game, int playerIdx) {
                 }
                 
                 // --- OPPORTUNISTIC TRADER ---
-                // Balanced approach
+                // Balanced approach, delays construction during inflation
                 else if (strcmp(player->name, "Opportunistic Trader") == 0) {
-                    if (player->cash - cost >= 500) buildDecision = 1;
+                    if (game->currentInflationRate > 0) {
+                        buildDecision = 0; // Delays construction
+                    } else if (player->cash - cost >= 500) {
+                        buildDecision = 1;
+                    }
                 }
 
                 // Execute build using the appropriate function

@@ -167,6 +167,9 @@ typedef struct GameState{
     PropertyGroup currentDeclineGroup;
     int boomCooldowns[8];    // Cooldown before a group can Boom again
     int declineCooldowns[8]; // Cooldown before a group can Decline again
+    
+    float currentInflationRate;
+    float currentLoanInterestRate;
 
 }GameState;
 

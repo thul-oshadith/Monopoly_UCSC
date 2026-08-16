@@ -332,7 +332,7 @@ void takeLoan(GameState *game, int playerIdx, int amountToBorrow) {
     }
 
     p->activeLoan.amount = amountToBorrow;
-    p->activeLoan.interestRate = applyEventLoanInterest(game, 0.08f); // 8% default modified by events
+    p->activeLoan.interestRate = applyEventLoanInterest(game, game->currentLoanInterestRate); // Base depends on inflation, modified by events
     p->activeLoan.remainingRounds = 20;
     p->activeLoan.active = 1;
     p->cash += amountToBorrow;
