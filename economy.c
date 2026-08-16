@@ -2,12 +2,47 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// Depreciation Constants (Rule-LK 15-16, 28)
-#define DEPRECIATION_GRACE_ROUNDS 50
-#define DEPRECIATION_INTERVAL 5
-#define MAX_DEPRECIATION_PERCENT 30
-#define STRUCTURAL_DAMAGE_PENALTY 15
-#define STRUCTURAL_DAMAGE_THRESHOLD 20
+// -------------------------------------------------------------
+// ECONOMIC EVENTS 
+// -------------------------------------------------------------
+
+//displays the economic event in the console
+void triggerEconomicEvent(GameState *game) {
+    game->currentEvent = (EconomicEvent)(rand() % 8 + 1); // Random event from 1 to 8
+    printf("\n======================================================\n");
+    printf("  >>> NATIONAL ECONOMIC EVENT TRIGGERED! <<<\n");
+    
+    switch (game->currentEvent) {
+        case EVENT_TOURISM_BOOM:
+            printf("  Event: TOURISM BOOM\n  Hotels receive double rent. Southern coastal properties increase by 15%%.\n");
+            break;
+        case EVENT_FUEL_CRISIS:
+            printf("  Event: FUEL CRISIS\n  Railway rent doubles. Property development costs increase 20%%.\n");
+            break;
+        case EVENT_HEAVY_MONSOON:
+            printf("  Event: HEAVY MONSOON\n  Flood risk increases. Insurance premiums increase. Coastal properties lose 10%% value.\n");
+            break;
+        case EVENT_ECONOMIC_RECESSION:
+            printf("  Event: ECONOMIC RECESSION\n  Property values decrease 15%%. Rent decreases 10%%. Loan interest increases by 15%%.\n");
+            break;
+        case EVENT_STOCK_MARKET_BOOM:
+            printf("  Event: STOCK MARKET BOOM\n  Property values increase 10%%. Loan interest decreases by 10%%.\n");
+            break;
+        case EVENT_GOVERNMENT_HOUSING:
+            printf("  Event: GOVERNMENT HOUSING PROGRAMME\n  House construction costs reduce 25%%.\n");
+            break;
+        case EVENT_FOREIGN_INVESTMENT:
+            printf("  Event: FOREIGN INVESTMENT\n  Commercial properties increase 20%%.\n");
+            break;
+        case EVENT_POLITICAL_UNREST:
+            printf("  Event: POLITICAL UNREST\n  Riot probability doubles. Hotel rent drops by 50%%. Business interruption claims increase.\n");
+            break;
+        default:
+            break;
+    }
+    printf("======================================================\n\n");
+}
+
 // Modifies the base rent of a property based on active economic events
 int applyEventRentModifier(GameState *game, int sqIdx, int rent, int isHotel) {
     Square *sq = &game->board[sqIdx];
@@ -32,7 +67,7 @@ int applyEventRentModifier(GameState *game, int sqIdx, int rent, int isHotel) {
     return rent;
 }
 
-// Modifies the property value (for loans and auctions)
+// Modifies the property value
 int applyEventValueModifier(GameState *game, int sqIdx, int value) {
     Square *sq = &game->board[sqIdx];
     
@@ -54,6 +89,38 @@ int applyEventValueModifier(GameState *game, int sqIdx, int value) {
 
     return value;
 }
+
+
+// Modifies house building costs
+int applyEventHouseCostModifier(GameState *game, int cost) {
+    if (game->currentEvent == EVENT_FUEL_CRISIS) {
+        cost = (cost * 120) / 100; // +20%
+    } else if (game->currentEvent == EVENT_GOVERNMENT_HOUSING) {
+        cost = (cost * 75) / 100; // -25%
+    }
+    return cost;
+}
+
+// Modifies loan interest rate
+float applyEventLoanInterest(GameState *game, float baseInterest) {
+    if (game->currentEvent == EVENT_ECONOMIC_RECESSION) {
+        return baseInterest + 0.15f; // +15%
+    } else if (game->currentEvent == EVENT_STOCK_MARKET_BOOM) {
+        float rate = baseInterest - 0.10f; // -10%
+        return rate < 0 ? 0.0f : rate;
+    }
+    return baseInterest;
+}
+
+// -------------------------------------------------------------
+// DEPRECIATION 
+// -------------------------------------------------------------
+
+#define DEPRECIATION_GRACE_ROUNDS 50
+#define DEPRECIATION_INTERVAL 5
+#define MAX_DEPRECIATION_PERCENT 30
+#define STRUCTURAL_DAMAGE_PENALTY 15
+#define STRUCTURAL_DAMAGE_THRESHOLD 20
 
 // Applies property depreciation and structural damage penalties (Rules 15-16, 28)
 int applyDepreciationModifier(GameState *game, int sqIdx, int value) {
@@ -81,26 +148,6 @@ int applyDepreciationModifier(GameState *game, int sqIdx, int value) {
     return value;
 }
 
-// Modifies house building costs
-int applyEventHouseCostModifier(GameState *game, int cost) {
-    if (game->currentEvent == EVENT_FUEL_CRISIS) {
-        cost = (cost * 120) / 100; // +20%
-    } else if (game->currentEvent == EVENT_GOVERNMENT_HOUSING) {
-        cost = (cost * 75) / 100; // -25%
-    }
-    return cost;
-}
-
-// Modifies loan interest rate
-float applyEventLoanInterest(GameState *game, float baseInterest) {
-    if (game->currentEvent == EVENT_ECONOMIC_RECESSION) {
-        return baseInterest + 0.15f; // +15%
-    } else if (game->currentEvent == EVENT_STOCK_MARKET_BOOM) {
-        float rate = baseInterest - 0.10f; // -10%
-        return rate < 0 ? 0.0f : rate;
-    }
-    return baseInterest;
-}
 
 // Processes end-of-round depreciation for properties and buildings
 void processDepreciation(GameState *game) {
@@ -130,23 +177,10 @@ void processDepreciation(GameState *game) {
     }
 }
 
-// Processes end-of-round insurance decrements
-void processEndRoundInsurance(GameState *game) {
-    for (int i = 0; i < SQUARE_COUNT; i++) {
-        if (game->board[i].type == SQUARE_PROPERTY) {
-            Property *prop = &game->board[i].data.property;
-            if (prop->insurance != NONE && prop->insuranceRoundsRemaining > 0) {
-                prop->insuranceRoundsRemaining--;
-                if (prop->insuranceRoundsRemaining == 3) {
-                    printf("  [!] RENEWAL REMINDER: %s's insurance on %s expires in 3 rounds!\n", game->players[prop->owner].name, prop->name);
-                } else if (prop->insuranceRoundsRemaining == 0) {
-                    prop->insurance = NONE;
-                    printf("  [!] INSURANCE EXPIRED: %s's policy on %s has expired.\n", game->players[prop->owner].name, prop->name);
-                }
-            }
-        }
-    }
-}
+
+// -------------------------------------------------------------
+// DISASTER
+// -------------------------------------------------------------
 
 // Triggers random disasters every 10 rounds
 void triggerRandomDisaster(GameState *game) {
@@ -201,7 +235,7 @@ void triggerRandomDisaster(GameState *game) {
 }
 
 // -------------------------------------------------------------
-// DYNAMIC PROPERTY MARKET (Rules LK-30 to LK-34)
+// DYNAMIC PROPERTY MARKET 
 // -------------------------------------------------------------
 
 // Helper to get group name as string
@@ -220,13 +254,13 @@ const char* getGroupName(PropertyGroup group) {
 }
 
 void processDynamicPropertyMarket(GameState *game) {
-    // 1. Tick down cooldowns
+    // Tick down cooldowns
     for (int i = 0; i < 8; i++) {
         if (game->boomCooldowns[i] > 0) game->boomCooldowns[i]--;
         if (game->declineCooldowns[i] > 0) game->declineCooldowns[i]--;
     }
     
-    // 2. Review market every 10 rounds
+    // Review market every 10 rounds
     if (game->currentRound > 0 && game->currentRound % 10 == 0) {
         game->currentBoomGroup = NO_GROUP;
         game->currentDeclineGroup = NO_GROUP;
@@ -268,10 +302,10 @@ void processDynamicPropertyMarket(GameState *game) {
             printf("\n======================================================\n");
             printf("  >>> DYNAMIC PROPERTY MARKET REVIEW <<<\n");
             if (game->currentBoomGroup != NO_GROUP) {
-                printf("  📈 MARKET BOOM: %s Group properties!\n", getGroupName(game->currentBoomGroup));
+                printf("   MARKET BOOM: %s Group properties!\n", getGroupName(game->currentBoomGroup));
             }
             if (game->currentDeclineGroup != NO_GROUP) {
-                printf("  📉 MARKET DECLINE: %s Group properties!\n", getGroupName(game->currentDeclineGroup));
+                printf("   MARKET DECLINE: %s Group properties!\n", getGroupName(game->currentDeclineGroup));
             }
             printf("======================================================\n");
         }
@@ -350,11 +384,11 @@ int getDynamicMortgageValue(GameState *game, int sqIdx) {
 }
 
 // -------------------------------------------------------------
-// INFLATION (Rules LK-12 to LK-14)
+// INFLATION 
 // -------------------------------------------------------------
 
 void processInflation(GameState *game) {
-    // Possible inflation rates: -3%, 0%, 2%, 5%, 8%, 12%
+ 
     float possibleRates[] = {-0.03f, 0.00f, 0.02f, 0.05f, 0.08f, 0.12f};
     int rateIdx = rand() % 6;
     float rate = possibleRates[rateIdx];
@@ -377,16 +411,16 @@ void processInflation(GameState *game) {
     printf("\n======================================================\n");
     printf("  >>> NATIONAL ECONOMY REVIEW <<<\n");
     if (rate < 0) {
-        printf("  📉 DEFLATION! The economy shrank by %.0f%%.\n", -rate * 100);
+        printf("   DEFLATION! The economy shrank by %.0f%%.\n", -rate * 100);
     } else if (rate == 0) {
-        printf("  ⚖️ STAGNATION. The economy remains stable at 0%% inflation.\n");
+        printf("   STAGNATION. The economy remains stable at 0%% inflation.\n");
     } else {
-        printf("  📈 INFLATION! The economy grew by %.0f%%.\n", rate * 100);
+        printf("   INFLATION! The economy grew by %.0f%%.\n", rate * 100);
     }
-    printf("  🏦 New Loan Interest Rate: %.0f%%\n", game->currentLoanInterestRate * 100);
+    printf("   New Loan Interest Rate: %.0f%%\n", game->currentLoanInterestRate * 100);
     printf("======================================================\n");
     
-    // Compound all base property values (Rule LK-14)
+    // Compound all base property values
     if (rate != 0.0f) {
         float multiplier = 1.0f + rate;
         for (int i = 0; i < SQUARE_COUNT; i++) {
@@ -408,6 +442,12 @@ void processInflation(GameState *game) {
     }
 }
 
+
+// -------------------------------------------------------------
+// GOVERNMENT REGULATIONS
+// -------------------------------------------------------------
+
+
 // Prototype for payAmount
 void payAmount(GameState *game, int payerIdx, int payeeIdx, int amount);
 
@@ -416,7 +456,7 @@ void processGovernmentRegulations(GameState *game) {
     game->currentRegulation = (GovernmentRegulation)(rand() % 8 + 1); // 1 to 8
     
     printf("\n======================================================\n");
-    printf("  🏛️  GOVERNMENT REGULATION ISSUED!  🏛️\n");
+    printf("    GOVERNMENT REGULATION ISSUED!  \n");
     
     switch (game->currentRegulation) {
         case REG_INCREASE_PROPERTY_TAX:

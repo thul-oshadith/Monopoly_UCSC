@@ -17,8 +17,17 @@ void triggerRandomDisaster(GameState *game);
 void processDynamicPropertyMarket(GameState *game);
 void processInflation(GameState *game);
 void processGovernmentRegulations(GameState *game);
+void triggerEconomicEvent(GameState *game);
 void attemptToUnmortgage(GameState *game, int playerIdx);
 int handleJailTurn(GameState *game, int p, int die1, int die2);
+
+// Valuation helpers
+int calculateNetWorth(GameState *game, int playerIdx);
+int getDynamicPurchasePrice(GameState *game, int sqIdx);
+int applyEventValueModifier(GameState *game, int sqIdx, int value);
+int applyDynamicMarketValue(GameState *game, int sqIdx, int value);
+int applyDynamicMarketHouseCost(GameState *game, PropertyGroup group, int cost);
+int applyEventHouseCostModifier(GameState *game, int cost);
 
 int main(){
     srand(time(NULL)); // seed random numbers for dice
@@ -141,39 +150,7 @@ int main(){
 
         // Process Economic Events (Rule-LK 18)
         if (game.currentRound > 0 && game.currentRound % 15 == 0) {
-            game.currentEvent = (EconomicEvent)(rand() % 8 + 1); // Random event from 1 to 8
-            printf("\n======================================================\n");
-            printf("  >>> NATIONAL ECONOMIC EVENT TRIGGERED! <<<\n");
-            
-            switch (game.currentEvent) {
-                case EVENT_TOURISM_BOOM:
-                    printf("  Event: TOURISM BOOM\n  Hotels receive double rent. Southern coastal properties increase by 15%%.\n");
-                    break;
-                case EVENT_FUEL_CRISIS:
-                    printf("  Event: FUEL CRISIS\n  Railway rent doubles. Property development costs increase 20%%.\n");
-                    break;
-                case EVENT_HEAVY_MONSOON:
-                    printf("  Event: HEAVY MONSOON\n  Flood risk increases. Insurance premiums increase. Coastal properties lose 10%% value.\n");
-                    break;
-                case EVENT_ECONOMIC_RECESSION:
-                    printf("  Event: ECONOMIC RECESSION\n  Property values decrease 15%%. Rent decreases 10%%. Loan interest increases by 15%%.\n");
-                    break;
-                case EVENT_STOCK_MARKET_BOOM:
-                    printf("  Event: STOCK MARKET BOOM\n  Property values increase 10%%. Loan interest decreases by 10%%.\n");
-                    break;
-                case EVENT_GOVERNMENT_HOUSING:
-                    printf("  Event: GOVERNMENT HOUSING PROGRAMME\n  House construction costs reduce 25%%.\n");
-                    break;
-                case EVENT_FOREIGN_INVESTMENT:
-                    printf("  Event: FOREIGN INVESTMENT\n  Commercial properties increase 20%%.\n");
-                    break;
-                case EVENT_POLITICAL_UNREST:
-                    printf("  Event: POLITICAL UNREST\n  Riot probability doubles. Hotel rent drops by 50%%. Business interruption claims increase.\n");
-                    break;
-                default:
-                    break;
-            }
-            printf("======================================================\n\n");
+            triggerEconomicEvent(&game);
         }
 
         // Process Government Regulations (Rule LK-24)
@@ -196,18 +173,7 @@ int main(){
     for (int i = 0; i < PLAYER_COUNT; i++) {
         if (game.players[i].bankrupt) continue;
 
-        int propertyValue = 0;
-        for (int j = 0; j < SQUARE_COUNT; j++) {
-            if (game.board[j].type == SQUARE_PROPERTY && game.board[j].data.property.owner == i) {
-                propertyValue += game.board[j].data.property.purchasePrice;
-            } else if (game.board[j].type == SQUARE_RAILWAY && game.board[j].data.railway.owner == i) {
-                propertyValue += game.board[j].data.railway.purchasePrice;
-            } else if (game.board[j].type == SQUARE_UTILITY && game.board[j].data.utility.owner == i) {
-                propertyValue += game.board[j].data.utility.purchasePrice;
-            }
-        }
-
-        netWorths[i] = game.players[i].cash + propertyValue;
+        netWorths[i] = calculateNetWorth(&game, i);
         if (netWorths[i] > highestNetWorth) {
             highestNetWorth = netWorths[i];
             winnerIdx = i;

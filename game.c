@@ -4,11 +4,9 @@
 #include <string.h>
 #include "types.h"
 
-// Depreciation Constants (shared with economy.c)
-#define DEPRECIATION_GRACE_ROUNDS 50
-#define DEPRECIATION_INTERVAL 5
-#define MAX_DEPRECIATION_PERCENT 30
-#define STRUCTURAL_DAMAGE_PENALTY 15
+// -------------------------------------------------------------
+// DECIDE TURN ORDER
+// -------------------------------------------------------------
 
 // Recursive function to handle rolling and ties
 void rankPlayers(GameState *game, int candidates[], int count, int *resultPos, int isReroll) {
@@ -119,7 +117,17 @@ void payAmount(GameState *game, int payerIdx, int payeeIdx, int amount);
 int applyEventRentModifier(GameState *game, int sqIdx, int rent, int isHotel);
 int applyDynamicMarketRent(GameState *game, int sqIdx, int rent);
 int getDynamicPurchasePrice(GameState *game, int sqIdx);
+int applyEventValueModifier(GameState *game, int sqIdx, int value);
 
+// -------------------------------------------------------------
+// Handle Landing
+// -------------------------------------------------------------
+
+// Depreciation Constants (shared with economy.c)
+#define DEPRECIATION_GRACE_ROUNDS 50
+#define DEPRECIATION_INTERVAL 5
+#define MAX_DEPRECIATION_PERCENT 30
+#define STRUCTURAL_DAMAGE_PENALTY 15
 void handleInsuranceSquare(GameState *game, int playerIdx);
 
 void handleLanding(GameState *game, int playerIdx, int diceTotal) {
@@ -136,6 +144,7 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
         if (prop->owner == -1) {
          // New AI buying logic
          int price = getDynamicPurchasePrice(game, pos);
+         price = applyEventValueModifier(game, pos, price);
          attemptPurchase(game, playerIdx, sq, price, prop->group);
             
         } 
@@ -229,6 +238,7 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             {
                 // New AI buying logic
                 int price = getDynamicPurchasePrice(game, pos);
+                price = applyEventValueModifier(game, pos, price);
                 attemptPurchase(game, playerIdx, sq, price, NO_GROUP);
             }
             else if (owner == playerIdx)
@@ -276,6 +286,7 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             {
                 // New AI buying logic
                 int price = getDynamicPurchasePrice(game, pos);
+                price = applyEventValueModifier(game, pos, price);
                 attemptPurchase(game, playerIdx, sq, price, NO_GROUP);
             }
             else if (owner == playerIdx)

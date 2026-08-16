@@ -6,7 +6,6 @@ int getDynamicMortgageValue(GameState *game, int sqIdx);
 int getDynamicPurchasePrice(GameState *game, int sqIdx);
 int applyEventValueModifier(GameState *game, int sqIdx, int value);
 int applyDepreciationModifier(GameState *game, int sqIdx, int value);
-// Forward declaration of helper functions
 int checkIfCompletesSet(GameState *game, int playerIdx, PropertyGroup group);
 void startAuction(GameState *game, int sqIdx);
 
@@ -14,12 +13,15 @@ int applyEventValueModifier(GameState *game, int sqIdx, int value);
 int applyDepreciationModifier(GameState *game, int sqIdx, int value);
 float applyEventLoanInterest(GameState *game, float baseInterest);
 
-// AI Purchase Decision — each player has their own brain
+
+// -------------------------------------------------------------
+// HANDLE PURCHASING
+// -------------------------------------------------------
 void attemptPurchase(GameState *game, int playerIdx, Square *sq, int purchasePrice, PropertyGroup group) {
     Player *player = &game->players[playerIdx];
     int buyDecision = 0;
 
-    // Rule LK-24: ANTI-SPECULATION ACT
+    // ANTI-SPECULATION ACT
     if (game->currentRegulation == REG_ANTI_SPECULATION_ACT) {
         int undevelopedCount = 0;
         for (int i = 0; i < SQUARE_COUNT; i++) {
@@ -104,6 +106,10 @@ void attemptPurchase(GameState *game, int playerIdx, Square *sq, int purchasePri
         startAuction(game, sq->index);
     }
 }
+
+// -------------------------------------------------------------
+// AUCTION
+// -------------------------------------------------------------
 
 // Executes an auction for an unowned property
 void startAuction(GameState *game, int sqIdx) {
@@ -263,7 +269,11 @@ int attemptToRaiseFunds(GameState *game, int playerIdx, int amountNeeded) {
     return (payer->cash >= amountNeeded) ? 1 : 0;
 }
 
-// Helper: Processes payments and handles bankruptcy if a player cannot pay
+
+// -------------------------------------------------------------
+// HANDLE PAYMENTS
+// -------------------------------------------------------------
+
 void payAmount(GameState *game, int payerIdx, int payeeIdx, int amount) {
     Player *payer = &game->players[payerIdx];
     
@@ -317,6 +327,10 @@ void payAmount(GameState *game, int payerIdx, int payeeIdx, int amount) {
         }
     }
 }
+
+// -------------------------------------------------------------
+// HANDLE LOANS
+// -------------------------------------------------------------
 
 // Calculate max loan available for player based on eligible un-locked, un-mortgaged collateral
 int calculateMaxLoan(GameState *game, int playerIdx) {
@@ -513,6 +527,10 @@ void processEndRoundLoans(GameState *game) {
     }
 }
 
+// -------------------------------------------------------------
+// HANDLE INSURANCE
+// -------------------------------------------------------------
+
 void handleInsuranceSquare(GameState *game, int playerIdx) {
     Player *player = &game->players[playerIdx];
     char *pname = player->name;
@@ -559,6 +577,25 @@ void handleInsuranceSquare(GameState *game, int playerIdx) {
                         prop->insuranceRoundsRemaining = 20;
                         printf("  [+] %s bought %s insurance for %s (LKR %d)\n", pname, choice == BASIC ? "BASIC" : "COMPREHENSIVE", prop->name, premium);
                     }
+                }
+            }
+        }
+    }
+}
+
+
+// Processes end-of-round insurance decrements
+void processEndRoundInsurance(GameState *game) {
+    for (int i = 0; i < SQUARE_COUNT; i++) {
+        if (game->board[i].type == SQUARE_PROPERTY) {
+            Property *prop = &game->board[i].data.property;
+            if (prop->insurance != NONE && prop->insuranceRoundsRemaining > 0) {
+                prop->insuranceRoundsRemaining--;
+                if (prop->insuranceRoundsRemaining == 3) {
+                    printf("  [!] RENEWAL REMINDER: %s's insurance on %s expires in 3 rounds!\n", game->players[prop->owner].name, prop->name);
+                } else if (prop->insuranceRoundsRemaining == 0) {
+                    prop->insurance = NONE;
+                    printf("  [!] INSURANCE EXPIRED: %s's policy on %s has expired.\n", game->players[prop->owner].name, prop->name);
                 }
             }
         }
