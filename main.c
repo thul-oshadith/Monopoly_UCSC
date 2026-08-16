@@ -20,6 +20,7 @@ void processGovernmentRegulations(GameState *game);
 void triggerEconomicEvent(GameState *game);
 void attemptToUnmortgage(GameState *game, int playerIdx);
 int handleJailTurn(GameState *game, int p, int die1, int die2);
+void displayRoundSummary(GameState *game);
 
 // Valuation helpers
 int calculateNetWorth(GameState *game, int playerIdx);
@@ -159,6 +160,8 @@ int main(){
                 if (game.currentRound > 0 && game.currentRound % 20 == 0) {
                     processGovernmentRegulations(&game);
                 }
+                
+                displayRoundSummary(&game);
             }
         }
 

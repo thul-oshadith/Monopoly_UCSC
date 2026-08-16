@@ -418,4 +418,49 @@ int handleJailTurn(GameState *game, int p, int die1, int die2) {
             return 1; // Did not escape, skip rest of turn
         }
     }
+
+}
+
+int calculateNetWorth(GameState *game, int playerIdx);
+
+void displayRoundSummary(GameState *game) {
+    printf("\n------------------------------------------------------\n");
+    printf("Round %d Summary\n", game->currentRound);
+    printf("------------------------------------------------------\n");
+
+    for (int i = 0; i < PLAYER_COUNT; i++) {
+        if (game->players[i].bankrupt) continue;
+
+        int properties = 0;
+        int hotels = 0;
+
+        for (int j = 0; j < SQUARE_COUNT; j++) {
+            if (game->board[j].type == SQUARE_PROPERTY && game->board[j].data.property.owner == i) {
+                properties++;
+                if (game->board[j].data.property.hotel > 0) {
+                    hotels += game->board[j].data.property.hotel;
+                }
+            } else if (game->board[j].type == SQUARE_RAILWAY && game->board[j].data.railway.owner == i) {
+                properties++;
+            } else if (game->board[j].type == SQUARE_UTILITY && game->board[j].data.utility.owner == i) {
+                properties++;
+            }
+        }
+
+        printf("\n%s\n", game->players[i].name);
+        printf("\nCash : LKR %d\n", game->players[i].cash);
+        printf("\nNet Worth : LKR %d\n", calculateNetWorth(game, i));
+        printf("\nProperties : %d\n", properties);
+        if (hotels > 0) {
+            printf("\nHotels : %d\n", hotels);
+        }
+        
+        if (game->players[i].activeLoan.active) {
+            printf("\nOutstanding Loan : LKR %d\n", game->players[i].activeLoan.amount);
+        } else {
+            printf("\nOutstanding Loan : None\n");
+        }
+        
+        printf("\n------------------------------------------------------\n");
+    }
 }

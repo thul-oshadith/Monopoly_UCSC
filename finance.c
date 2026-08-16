@@ -9,6 +9,10 @@ int applyDepreciationModifier(GameState *game, int sqIdx, int value);
 int checkIfCompletesSet(GameState *game, int playerIdx, PropertyGroup group);
 void startAuction(GameState *game, int sqIdx);
 
+int hasMonopoly(GameState *game, int playerIdx, PropertyGroup group);
+int getPropertyToUpgrade(GameState *game, int playerIdx, PropertyGroup group);
+int applyEventHouseCostModifier(GameState *game, int cost);
+int applyDynamicMarketHouseCost(GameState *game, PropertyGroup group, int cost);
 int applyEventValueModifier(GameState *game, int sqIdx, int value);
 int applyDepreciationModifier(GameState *game, int sqIdx, int value);
 float applyEventLoanInterest(GameState *game, float baseInterest);
@@ -424,7 +428,30 @@ void handleBankSquare(GameState *game, int playerIdx) {
                 repayLoan(game, playerIdx);
             }
         } else {
-            if (p->cash < 500 && maxLoan >= 1000) {
+            int needsLoan = 0;
+            if (maxLoan > 0) {
+                PropertyGroup groups[] = {BROWN, LIGHT_BLUE, PINK, ORANGE, RED, YELLOW, GREEN, DARK_BLUE};
+                for (int g = 0; g < 8; g++) {
+                    if (hasMonopoly(game, playerIdx, groups[g])) {
+                        int sqIdx = getPropertyToUpgrade(game, playerIdx, groups[g]);
+                        if (sqIdx != -1) {
+                            Property *prop = &game->board[sqIdx].data.property;
+                            int cost = (prop->houses == 4) ? prop->hotelCost : prop->houseCost;
+                            cost = applyEventHouseCostModifier(game, cost);
+                            cost = applyDynamicMarketHouseCost(game, groups[g], cost);
+                            if (game->currentRegulation == REG_HOUSING_SUBSIDY) {
+                                cost = (int)(cost * 0.70f);
+                            }
+                            
+                            if (p->cash < cost && (p->cash + maxLoan) >= cost) {
+                                needsLoan = 1;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            if (needsLoan) {
                 takeLoan(game, playerIdx, maxLoan);
             }
         }
@@ -456,7 +483,33 @@ void handleBankSquare(GameState *game, int playerIdx) {
             }
         }
     } else if (strcmp(p->name, "Opportunistic Trader") == 0) {
-        // To be provided later
+        float currentInterest = applyEventLoanInterest(game, game->currentLoanInterestRate);
+        if (currentInterest <= 0.08f) {
+            // Favorable rate: borrow heavily
+            if (!p->activeLoan.active) {
+                if (maxLoan > 0) {
+                    takeLoan(game, playerIdx, maxLoan);
+                }
+            } else {
+                unlockCollateral(game, playerIdx);
+                int newMax = calculateMaxLoan(game, playerIdx);
+                if (newMax > p->activeLoan.amount) {
+                    printf("  >> %s borrowed heavily against favorable rates!\n", p->name);
+                    int difference = newMax - p->activeLoan.amount;
+                    p->cash += difference;
+                    takeLoan(game, playerIdx, newMax); // Overwrites old loan
+                } else {
+                    takeLoan(game, playerIdx, p->activeLoan.amount); // Re-lock
+                }
+            }
+        } else {
+            // Unfavorable rate: repay rapidly
+            if (p->activeLoan.active) {
+                if (p->cash >= p->activeLoan.amount) {
+                    repayLoan(game, playerIdx);
+                }
+            }
+        }
     }
 }
 
