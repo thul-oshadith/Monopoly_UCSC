@@ -18,6 +18,7 @@ void processDynamicPropertyMarket(GameState *game);
 void processInflation(GameState *game);
 void processGovernmentRegulations(GameState *game);
 void attemptToUnmortgage(GameState *game, int playerIdx);
+int handleJailTurn(GameState *game, int p, int die1, int die2);
 
 int main(){
     srand(time(NULL)); // seed random numbers for dice
@@ -74,43 +75,10 @@ int main(){
             int diceTotal = die1 + die2;
 
             //JAIL LOGIC
-            if (game.players[p].inJail){
-                printf("%s is in the JAIL (Turn%d). They rolled %d and %d.\n", game.players[p].name,
-                game.players[p].jailTurns + 1, die1, die2);
-
-                if(die1 == die2){
-                    printf(" >> Doubles! %s escapes Jail \n", game.players[p].name);
-                    game.players[p].inJail = 0;
-                    game.players[p].jailTurns = 0;
-                }
-                else if (game.players[p].cash>=300)
-                {
-                    printf(" >> No Doubles, but %s pays LKR 300 bail to escap.\n", game.players[p].name);
-                    game.players[p].cash -=300;
-                    game.players[p].inJail = 0;
-                    game.players[p].jailTurns = 0;
-                }
-
-                else
-                {
-                    game.players[p].jailTurns++;
-                    if (game.players[p].jailTurns >=3)
-                    {
-                        printf(" >> %s has served 3 turns.Forced release!\n",game.players[p].name);
-                        game.players[p].inJail = 0;
-                        game.players[p].jailTurns = 0;
-                    }
-                    else
-                    {
-                        printf(" >> %s stays in Jail.\n", game.players[p].name);
-                        continue; // skip rest of turn
-                    }
-
-                }
-
+            if (handleJailTurn(&game, p, die1, die2)) {
+                continue; // skip rest of turn
             }
-
-            //END OF JAIL LOGIC
+            
 
             int oldPosition = game.players[p].position;
             int newPosition = (oldPosition + diceTotal) % SQUARE_COUNT;

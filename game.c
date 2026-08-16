@@ -369,3 +369,42 @@ void handleLanding(GameState *game, int playerIdx, int diceTotal) {
             break;
     }
 }
+
+// Handles a player's turn if they are in jail. Returns 1 if their turn should end immediately, 0 if they escape and can move.
+int handleJailTurn(GameState *game, int p, int die1, int die2) {
+    if (!game->players[p].inJail) return 0;
+    
+    printf("%s is in the JAIL (Turn %d). They rolled %d and %d.\n", game->players[p].name,
+    game->players[p].jailTurns + 1, die1, die2);
+
+    if(die1 == die2){
+        printf(" >> Doubles! %s escapes Jail \n", game->players[p].name);
+        game->players[p].inJail = 0;
+        game->players[p].jailTurns = 0;
+        return 0; // Escaped, proceed with turn
+    }
+    else if (game->players[p].cash >= 300)
+    {
+        printf(" >> No Doubles, but %s pays LKR 300 bail to escape.\n", game->players[p].name);
+        game->players[p].cash -= 300;
+        game->players[p].inJail = 0;
+        game->players[p].jailTurns = 0;
+        return 0; // Escaped, proceed with turn
+    }
+    else
+    {
+        game->players[p].jailTurns++;
+        if (game->players[p].jailTurns >= 3)
+        {
+            printf(" >> %s has served 3 turns. Forced release!\n", game->players[p].name);
+            game->players[p].inJail = 0;
+            game->players[p].jailTurns = 0;
+            return 0; // Escaped, proceed with turn
+        }
+        else
+        {
+            printf(" >> %s stays in Jail.\n", game->players[p].name);
+            return 1; // Did not escape, skip rest of turn
+        }
+    }
+}
